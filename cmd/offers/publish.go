@@ -1,11 +1,11 @@
 package offers
 
 import (
-"context"
+	"context"
 
-"github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 
-cobraExt "github.com/devigned/pub/pkg/cobra"
+	cobraExt "github.com/devigned/pub/pkg/cobra"
 )
 
 func init() {

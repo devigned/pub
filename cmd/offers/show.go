@@ -19,4 +19,3 @@ var showCmd = &cobra.Command{
 
 	}),
 }
-
