@@ -5,10 +5,8 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/devigned/pub/cmd/offers"
 )
@@ -35,32 +33,6 @@ var (
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
-		os.Exit(1)
-	}
-}
-
-func checkAuthFlags() error {
-
-	return nil
-}
-
-func initConfig() {
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
-	} else {
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		viper.AddConfigPath(home)
-		viper.AddConfigPath(".")
-		viper.SetConfigName(".pub")
-	}
-
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("Can't read config:", err)
 		os.Exit(1)
 	}
 }
