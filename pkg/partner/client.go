@@ -164,13 +164,13 @@ func (c *Client) GetOfferBySlot(ctx context.Context, params ShowOfferBySlotParam
 		return nil, fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
 	}
 
-	var offers Offer
-	if err := json.Unmarshal(body, &offers); err != nil {
+	var offer Offer
+	if err := json.Unmarshal(body, &offer); err != nil {
 		fmt.Println(string(body))
 		return nil, err
 	}
 
-	return &offers, nil
+	return &offer, nil
 }
 
 // GetOfferByVersion will get an offer by publisher and offer ID and version
@@ -192,13 +192,13 @@ func (c *Client) GetOfferByVersion(ctx context.Context, params ShowOfferByVersio
 		return nil, fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
 	}
 
-	var offers Offer
-	if err := json.Unmarshal(body, &offers); err != nil {
+	var offer Offer
+	if err := json.Unmarshal(body, &offer); err != nil {
 		fmt.Println(string(body))
 		return nil, err
 	}
 
-	return &offers, nil
+	return &offer, nil
 }
 
 // GetOffer will get an offer by publisher and offer ID
@@ -227,6 +227,34 @@ func (c *Client) GetOffer(ctx context.Context, params ShowOfferParams) (*Offer, 
 	}
 
 	return &offers, nil
+}
+
+// GetOfferStatus gets the status of a given offer
+func (c *Client) GetOfferStatus(ctx context.Context, params ShowOfferParams) (*OfferStatus, error) {
+	path := fmt.Sprintf("api/publishers/%s/offers/%s/status?api-version=%s", params.PublisherID, params.OfferID, c.APIVersion)
+	res, err := c.execute(ctx, http.MethodGet, path, nil)
+	defer closeResponse(ctx, res)
+
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode > 299 {
+		return nil, fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
+	}
+
+	var status OfferStatus
+	if err := json.Unmarshal(body, &status); err != nil {
+		fmt.Println(string(body))
+		return nil, err
+	}
+
+	return &status, nil
 }
 
 // ListOffers will get all of the offers for a given publisher ID

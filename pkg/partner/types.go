@@ -127,4 +127,32 @@ type (
 		Definition              OfferDefinition `json:"definition,omitempty"`
 		ChangedTime             date.Time       `json:"changedTime,omitempty"`
 	}
+
+	// StatusMessage is a message associated with OfferStatus / StatusSteps
+	StatusMessage struct {
+		Message   string    `json:"messageHtml,omitempty"`
+		Level     string    `json:"level,omitempty"`
+		Timestamp date.Time `json:"timestamp,omitempty"`
+	}
+
+	// StatusStep is a step in the publication process
+	StatusStep struct {
+		EstimatedTimeFrame string          `json:"estimatedTimeFrame,omitempty"`
+		ID                 string          `json:"id,omitempty"`
+		StepName           string          `json:"stepName,omitempty"`
+		Description        string          `json:"description,omitempty"`
+		Status             string          `json:"status,omitempty"`
+		Messages           []StatusMessage `json:"messages,omitempty"`
+		ProgressPercentage int             `json:"progressPercentage,omitempty"`
+	}
+
+	// OfferStatus is the publication status and steps required
+	OfferStatus struct {
+		Status             string          `json:"status,omitempty"`
+		Messages           []StatusMessage `json:"messages,omitempty"`
+		Steps              []StatusStep    `json:"steps,omitempty"`
+		PreviewLinks       []string        `json:"previewLinks,omitempty"`
+		LiveLinks          []string        `json:"liveLinks,omitempty"`
+		NotificationEmails []string        `json:"notificationEmails,omitempty"`
+	}
 )
