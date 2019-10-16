@@ -1,4 +1,4 @@
-package offers
+package publishers
 
 import (
 	"github.com/spf13/cobra"
@@ -9,13 +9,13 @@ import (
 var (
 	defaultAPIVersion *string
 	rootCmd           = &cobra.Command{
-		Use:              "offers",
-		Short:            "a group of actions for working with offers",
+		Use:              "publishers",
+		Short:            "a group of actions for working with publishers",
 		TraverseChildren: true,
 	}
 )
 
-// RootCmd returns the root offers cmd
+// RootCmd returns the root publishers cmd
 func RootCmd(apiVersion *string) *cobra.Command {
 	defaultAPIVersion = apiVersion
 	return rootCmd

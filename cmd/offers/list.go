@@ -32,18 +32,13 @@ var (
 		Use:   "list",
 		Short: "list all offers",
 		Run: cobraExt.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := partner.New()
+			client, err := getClient()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
 
-			if listOfferArgs.APIVersion == "" {
-				listOfferArgs.APIVersion = *defaultAPIVersion
-			}
-
 			offers, err := client.ListOffers(ctx, partner.ListOffersParams{
 				PublisherID: listOfferArgs.PublisherID,
-				APIVersion:  listOfferArgs.APIVersion,
 			})
 
 			if err != nil {

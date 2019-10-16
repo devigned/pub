@@ -7,12 +7,13 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
-	"github.com/Azure/go-autorest/autorest/date"
 	"github.com/devigned/tab"
 )
 
@@ -28,6 +29,7 @@ type (
 	// Client is the HTTP client for the Cloud Partner Portal
 	Client struct {
 		Authorizer autorest.Authorizer
+		APIVersion string
 		Host       string
 		mwStack    []MiddlewareFunc
 	}
@@ -56,30 +58,62 @@ type (
 	// ListOffersParams is the parameters for listing offers
 	ListOffersParams struct {
 		PublisherID string
-		APIVersion  string
 	}
 
-	// Offer represents a Cloud Partner Portal offer
-	Offer struct {
-		TypeID      string          `json:"offerTypeId,omitempty"`
-		PublisherID string          `json:"publisherId,omitempty"`
-		Status      string          `json:"status,omitempty"`
-		ID          string          `json:"id,omitempty"`
-		Version     int             `json:"version,omitempty"`
-		Definition  OfferDefinition `json:"definition,omitempty"`
-		ChangedTime date.Time       `json:"changedTime,omitempty"`
+	// ShowOfferParams is the parameters for showing an offer
+	ShowOfferParams struct {
+		PublisherID string
+		OfferID     string
 	}
 
-	// OfferDefinition contains offer details
-	OfferDefinition struct {
-		DisplayText string `json:"displayText,omitempty"`
+	// ShowOfferByVersionParams is the parameters for showing an offer by version
+	ShowOfferByVersionParams struct {
+		PublisherID string
+		OfferID     string
+		Version     int
+	}
+
+	// ShowOfferBySlotParams is the parameters for showing an offer for a given slot
+	ShowOfferBySlotParams struct {
+		PublisherID string
+		OfferID     string
+		SlotID      string
+	}
+
+	// SimpleTokenProvider makes it easy to authorize with a string bearer token
+	SimpleTokenProvider struct{}
+)
+
+var (
+	httpLogger MiddlewareFunc = func(next RestHandler) RestHandler {
+		return func(ctx context.Context, req *http.Request) (*http.Response, error) {
+			requestDump, err := httputil.DumpRequest(req, true)
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println(string(requestDump))
+
+			res, err := next(ctx, req)
+			if err != nil {
+				return res, err
+			}
+
+			resDump, err := httputil.DumpResponse(res, true)
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println(string(resDump))
+
+			return res, err
+		}
 	}
 )
 
 // New creates a new Cloud Provider Portal client
-func New(opts ...ClientOption) (*Client, error) {
+func New(apiVersion string, opts ...ClientOption) (*Client, error) {
 	c := &Client{
-		Host: DefaultHost,
+		Host:       DefaultHost,
+		APIVersion: apiVersion,
 	}
 
 	for _, opt := range opts {
@@ -89,25 +123,115 @@ func New(opts ...ClientOption) (*Client, error) {
 	}
 
 	if c.Authorizer == nil {
-		settings, err := auth.GetSettingsFromEnvironment()
-		if err != nil {
-			return nil, err
-		}
-		settings.Values[auth.Resource] = CloudPartnerResource
+		var a autorest.Authorizer
+		if os.Getenv("AZURE_TOKEN") != "" {
+			a = new(SimpleTokenProvider)
+		} else {
+			settings, err := auth.GetSettingsFromEnvironment()
+			if err != nil {
+				return nil, err
+			}
+			settings.Values[auth.Resource] = CloudPartnerResource
 
-		a, err := settings.GetAuthorizer()
-		if err != nil {
-			return nil, err
+			a, err = settings.GetAuthorizer()
+			if err != nil {
+				return nil, err
+			}
 		}
+
 		c.Authorizer = a
 	}
 
 	return c, nil
 }
 
+// GetOfferBySlot will get an offer by publisher and offer ID and version
+func (c *Client) GetOfferBySlot(ctx context.Context, params ShowOfferBySlotParams) (*Offer, error) {
+	path := fmt.Sprintf("api/publishers/%s/offers/%s/slot/%s?api-version=%s", params.PublisherID, params.OfferID, params.SlotID, c.APIVersion)
+	res, err := c.execute(ctx, http.MethodGet, path, nil)
+	defer closeResponse(ctx, res)
+
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode > 299 {
+		return nil, fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
+	}
+
+	var offers Offer
+	if err := json.Unmarshal(body, &offers); err != nil {
+		fmt.Println(string(body))
+		return nil, err
+	}
+
+	return &offers, nil
+}
+
+// GetOfferByVersion will get an offer by publisher and offer ID and version
+func (c *Client) GetOfferByVersion(ctx context.Context, params ShowOfferByVersionParams) (*Offer, error) {
+	path := fmt.Sprintf("api/publishers/%s/offers/%s/versions/%d?api-version=%s", params.PublisherID, params.OfferID, params.Version, c.APIVersion)
+	res, err := c.execute(ctx, http.MethodGet, path, nil)
+	defer closeResponse(ctx, res)
+
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode > 299 {
+		return nil, fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
+	}
+
+	var offers Offer
+	if err := json.Unmarshal(body, &offers); err != nil {
+		fmt.Println(string(body))
+		return nil, err
+	}
+
+	return &offers, nil
+}
+
+// GetOffer will get an offer by publisher and offer ID
+func (c *Client) GetOffer(ctx context.Context, params ShowOfferParams) (*Offer, error) {
+	path := fmt.Sprintf("api/publishers/%s/offers/%s?api-version=%s", params.PublisherID, params.OfferID, c.APIVersion)
+	res, err := c.execute(ctx, http.MethodGet, path, nil)
+	defer closeResponse(ctx, res)
+
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode > 299 {
+		return nil, fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
+	}
+
+	var offers Offer
+	if err := json.Unmarshal(body, &offers); err != nil {
+		fmt.Println(string(body))
+		return nil, err
+	}
+
+	return &offers, nil
+}
+
 // ListOffers will get all of the offers for a given publisher ID
 func (c *Client) ListOffers(ctx context.Context, params ListOffersParams) ([]Offer, error) {
-	path := fmt.Sprintf("api/publishers/%s/offers?api-version=%s", params.PublisherID, params.APIVersion)
+	path := fmt.Sprintf("api/publishers/%s/offers?api-version=%s", params.PublisherID, c.APIVersion)
 	res, err := c.execute(ctx, http.MethodGet, path, nil)
 	defer closeResponse(ctx, res)
 
@@ -131,6 +255,34 @@ func (c *Client) ListOffers(ctx context.Context, params ListOffersParams) ([]Off
 	}
 
 	return offers, nil
+}
+
+// ListPublishers will get all of the publishers
+func (c *Client) ListPublishers(ctx context.Context) ([]Publisher, error) {
+	path := fmt.Sprintf("api/publishers?api-version=%s", c.APIVersion)
+	res, err := c.execute(ctx, http.MethodGet, path, nil)
+	defer closeResponse(ctx, res)
+
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode > 299 {
+		return nil, fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
+	}
+
+	var publishers []Publisher
+	if err := json.Unmarshal(body, &publishers); err != nil {
+		fmt.Println(string(body))
+		return nil, err
+	}
+
+	return publishers, nil
 }
 
 func (c *Client) execute(ctx context.Context, method string, entityPath string, body io.Reader, mw ...MiddlewareFunc) (*http.Response, error) {
@@ -157,6 +309,10 @@ func (c *Client) execute(ctx context.Context, method string, entityPath string, 
 	}
 
 	mwStack := []MiddlewareFunc{final}
+	if os.Getenv("DEBUG") == "true" {
+		mwStack = append(mwStack, httpLogger)
+	}
+
 	sl := len(c.mwStack) - 1
 	for i := sl; i >= 0; i-- {
 		mwStack = append(mwStack, c.mwStack[i])
@@ -183,5 +339,18 @@ func closeResponse(ctx context.Context, res *http.Response) {
 
 	if err := res.Body.Close(); err != nil {
 		tab.For(ctx).Error(err)
+	}
+}
+
+// WithAuthorization will inject the AZURE_TOKEN env var as the bearer token for API auth
+//
+// This is useful if you want to use a token from az cli.
+// `AZURE_TOKEN=$(az account get-access-token --resource https://cloudpartner.azure.com --query "accessToken" -o tsv) pub publishers list`
+func (s SimpleTokenProvider) WithAuthorization() autorest.PrepareDecorator {
+	return func(p autorest.Preparer) autorest.Preparer {
+		return autorest.PreparerFunc(func(r *http.Request) (*http.Request, error) {
+			r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("AZURE_TOKEN")))
+			return r, nil
+		})
 	}
 }

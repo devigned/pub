@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/devigned/pub/cmd/offers"
+	"github.com/devigned/pub/cmd/publishers"
 )
 
 func init() {
@@ -17,6 +18,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pub.yaml)")
 	rootCmd.PersistentFlags().StringVarP(&apiVersion, "api-version", "v", "2017-10-31", "the API version override")
 	rootCmd.AddCommand(offers.RootCmd(&apiVersion))
+	rootCmd.AddCommand(publishers.RootCmd(&apiVersion))
 }
 
 var (
