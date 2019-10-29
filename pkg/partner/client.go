@@ -1,6 +1,7 @@
 package partner
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -145,6 +146,38 @@ func New(apiVersion string, opts ...ClientOption) (*Client, error) {
 	return c, nil
 }
 
+// PutOffer will PUT an offer to the API and return the offer
+func (c *Client) PutOffer(ctx context.Context, offer *Offer) (*Offer, error) {
+	offerJSON, err := json.Marshal(offer)
+	if err != nil {
+		return nil, err
+	}
+
+	path := fmt.Sprintf("api/publishers/%s/offers/%s?api-version=%s", offer.PublisherID, offer.ID, c.APIVersion)
+	res, err := c.execute(ctx, http.MethodPut, path, bytes.NewReader(offerJSON))
+	defer closeResponse(ctx, res)
+
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode > 299 {
+		return nil, fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
+	}
+
+	var newOffer Offer
+	if err := json.Unmarshal(body, &newOffer); err != nil {
+		return nil, err
+	}
+
+	return &newOffer, nil
+}
+
 // GetOfferBySlot will get an offer by publisher and offer ID and version
 func (c *Client) GetOfferBySlot(ctx context.Context, params ShowOfferBySlotParams) (*Offer, error) {
 	path := fmt.Sprintf("api/publishers/%s/offers/%s/slot/%s?api-version=%s", params.PublisherID, params.OfferID, params.SlotID, c.APIVersion)
@@ -166,7 +199,6 @@ func (c *Client) GetOfferBySlot(ctx context.Context, params ShowOfferBySlotParam
 
 	var offer Offer
 	if err := json.Unmarshal(body, &offer); err != nil {
-		fmt.Println(string(body))
 		return nil, err
 	}
 
@@ -194,7 +226,6 @@ func (c *Client) GetOfferByVersion(ctx context.Context, params ShowOfferByVersio
 
 	var offer Offer
 	if err := json.Unmarshal(body, &offer); err != nil {
-		fmt.Println(string(body))
 		return nil, err
 	}
 
@@ -222,7 +253,6 @@ func (c *Client) GetOffer(ctx context.Context, params ShowOfferParams) (*Offer, 
 
 	var offers Offer
 	if err := json.Unmarshal(body, &offers); err != nil {
-		fmt.Println(string(body))
 		return nil, err
 	}
 
@@ -250,7 +280,6 @@ func (c *Client) GetOfferStatus(ctx context.Context, params ShowOfferParams) (*O
 
 	var status OfferStatus
 	if err := json.Unmarshal(body, &status); err != nil {
-		fmt.Println(string(body))
 		return nil, err
 	}
 
@@ -278,7 +307,6 @@ func (c *Client) ListOffers(ctx context.Context, params ListOffersParams) ([]Off
 
 	var offers []Offer
 	if err := json.Unmarshal(body, &offers); err != nil {
-		fmt.Println(string(body))
 		return nil, err
 	}
 
@@ -306,7 +334,6 @@ func (c *Client) ListPublishers(ctx context.Context) ([]Publisher, error) {
 
 	var publishers []Publisher
 	if err := json.Unmarshal(body, &publishers); err != nil {
-		fmt.Println(string(body))
 		return nil, err
 	}
 

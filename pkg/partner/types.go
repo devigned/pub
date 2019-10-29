@@ -74,12 +74,7 @@ type (
 		FreeTrialDurationInMonths *int  `json:"freeTrialDurationInMonths,omitempty"`
 	}
 
-	// VirtualMachineImage is the version of the image to publish (requires a signed Azure Storage URI)
-	VirtualMachineImage struct {
-		OSVHDURL string `json:"osVhdUrl,omitempty"`
-	}
-
-	// PlanVirtualMachineDetail is the details for virtual machine SKUs
+	// PlanVirtualMachineDetail contains the details for virtual machine SKUs
 	PlanVirtualMachineDetail struct {
 		SKUTitle                       string                         `json:"microsoft-azure-virtualmachines.skuTitle,omitempty"`
 		SKUSummary                     string                         `json:"microsoft-azure-virtualmachines.skuSummary,omitempty"`
@@ -96,17 +91,79 @@ type (
 		VMImages                       map[string]VirtualMachineImage `json:"microsoft-azure-virtualmachines.vmImages,omitempty"`
 	}
 
+	// DeploymentModelOption provides a constrained set of deployment modes
+	DeploymentModelOption string
+
+	// CloudAvailabilityOption provides a constrained set of available clouds
+	CloudAvailabilityOption string
+
+	// VirtualMachineImage represents an image version
+	VirtualMachineImage struct {
+		MediaName     string `json:"mediaName,omitempty"`
+		ShowInGui     *bool  `json:"showInGui,omitempty"`
+		PublishedDate string `json:"publishedDate,omitempty"` // string  b/c sometime the API returns ""
+		Label         string `json:"label,omitempty"`
+		Description   string `json:"description,omitempty"`
+		OSVHDURL      string `json:"osVhdUrl,omitempty"`
+	}
+
+	// PlanCoreVMDetail contains the details for a core virtual machine SKUs
+	PlanCoreVMDetail struct {
+		SKUTitle                   string                         `json:"microsoft-azure-corevm.skuTitle,omitempty"`
+		SKUSummary                 string                         `json:"microsoft-azure-corevm.skuSummary,omitempty"`
+		SKUDescription             string                         `json:"microsoft-azure-corevm.skuDescription,omitempty"`
+		HideSKUForSolutionTemplate *bool                          `json:"microsoft-azure-corevm.hideSKUForSolutionTemplate,omitempty"`
+		Hardened                   *bool                          `json:"microsoft-azure-corevm.hardened,omitempty"`
+		DeploymentModels           []DeploymentModelOption        `json:"microsoft-azure-corevm.deploymentModels,omitempty"`
+		CloudAvailability          []CloudAvailabilityOption      `json:"microsoft-azure-corevm.cloudAvailability,omitempty"`
+		PricingDetailsURL          string                         `json:"microsoft-azure-corevm.pricingDetailsUrl,omitempty"`
+		ImageType                  string                         `json:"microsoft-azure-corevm.imageType,omitempty"`
+		ImageVisibility            *bool                          `json:"microsoft-azure-corevm.imageVisibility,omitempty"`
+		Generation                 string                         `json:"microsoft-azure-corevm.generation,omitempty"`
+		OperatingSystemFamily      string                         `json:"microsoft-azure-corevm.operatingSystemFamily,omitempty"`
+		OSType                     string                         `json:"microsoft-azure-corevm.osType,omitempty"`
+		OSFriendlyName             string                         `json:"microsoft-azure-corevm.osFriendlyName,omitempty"`
+		RecommendedVMSizes         []string                       `json:"microsoft-azure-corevm.recommendedVMSizes,omitempty"`
+		SupportsHubOnOffSwitch     *bool                          `json:"microsoft-azure-corevm.supportsHubOnOffSwitch,omitempty"`
+		IsPremiumThirdParty        *bool                          `json:"microsoft-azure-corevm.isPremiumThirdParty,omitempty"`
+		SupportsHub                *bool                          `json:"microsoft-azure-corevm.supportsHub,omitempty"`
+		SupportsBackup             *bool                          `json:"microsoft-azure-corevm.supportsBackup,omitempty"`
+		FreeTierEligible           *bool                          `json:"microsoft-azure-corevm.freeTierEligible,omitempty"`
+		SupportsSriov              *bool                          `json:"microsoft-azure-corevm.supportsSirov,omitempty"`
+		SupportsAADLogin           *bool                          `json:"microsoft-azure-corevm.supportsAADLogin,omitempty"`
+		DefaultImageSizeGB         string                         `json:"microsoft-azure-corevm.defaultImageSizeGB,omitempty"`
+		VMImages                   map[string]VirtualMachineImage `json:"microsoft-azure-corevm.vmImagesPublicAzure,omitempty"`
+		SKUDescriptionPublicAzure  string                         `json:"microsoft-azure-corevm.skuDescriptionPublicAzure,omitempty"`
+		SKUDescriptionFairfax      string                         `json:"microsoft-azure-corevm.skuDescriptionFairfax,omitempty"`
+		SKUDescriptionMooncake     string                         `json:"microsoft-azure-corevm.skuDescriptionMooncake,omitempty"`
+		UsefulLinksPublicAzure     []string                       `json:"microsoft-azure-corevm.usefulLinksPublicAzure,omitempty"`
+		UsefulLinksFairfax         []string                       `json:"microsoft-azure-corevm.usefulLinksFairfax,omitempty"`
+		UsefulLinksMooncake        []string                       `json:"microsoft-azure-corevm.usefulLinksMooncake,omitempty"`
+		Categories                 []string                       `json:"microsoft-azure-corevm.categories,omitempty"`
+		SmallLogo                  string                         `json:"microsoft-azure-corevm.smallLogo,omitempty"`
+		MediumLogo                 string                         `json:"microsoft-azure-corevm.mediumLogo,omitempty"`
+		WideLogo                   string                         `json:"microsoft-azure-corevm.wideLogo,omitempty"`
+		ScreenShots                []string                       `json:"microsoft-azure-corevm.screenshots,omitempty"`
+		Videos                     []string                       `json:"microsoft-azure-corevm.videos,omitempty"`
+		LeadGenerationID           string                         `json:"microsoft-azure-corevm.leadGenerationId,omitempty"`
+		PrivacyURL                 string                         `json:"microsoft-azure-corevm.privacyURL,omitempty"`
+		TermsOfUse                 string                         `json:"microsoft-azure-corevm.termsOfUse,omitempty"`
+		MigratedOffer              *bool                          `json:"microsoft-azure-corevm.migratedOffer,omitempty"`
+	}
+
 	// Plan maps to a SKU in the marketplace
 	Plan struct {
-		PlanVirtualMachineDetail
 		ID      string   `json:"planId,omitempty"`
 		Regions []string `json:"regions,omitempty"`
+		PlanVirtualMachineDetail
+		PlanCoreVMDetail
 	}
 
 	// OfferDetail holds the details for the marketplace offer
 	OfferDetail struct {
 		VirtualMachineDetail
 		MarketplaceDetail
+		CoreVMOfferDetail
 	}
 
 	// OfferDefinition contains offer details
@@ -155,4 +212,46 @@ type (
 		LiveLinks          []string        `json:"liveLinks,omitempty"`
 		NotificationEmails []string        `json:"notificationEmails,omitempty"`
 	}
+
+	// CoreVMOfferDetail is the core vm structure
+	CoreVMOfferDetail struct {
+		LegacyOfferID        string   `json:"microsoft-azure-corevm.legacyOfferId,omitempty"`
+		LegacyPublisherID    string   `json:"microsoft-azure-corevm.legacyPublisherId,omitempty"`
+		Title                string   `json:"microsoft-azure-corevm.title,omitempty"`
+		Summary              string   `json:"microsoft-azure-corevm.summary,omitempty"`
+		Description          string   `json:"microsoft-azure-corevm.description,omitempty"`
+		AllowedSubscriptions []string `json:"microsoft-azure-corevm.allowedSubscriptions,omitempty"`
+		LeadDestination      string   `json:"microsoft-azure-corevm.leadDestination,omitempty"`
+	}
 )
+
+var (
+	// ARMDeploymentOption is an option for the deployment model slice in CoreVM which corresponds to Azure Resource Manager
+	ARMDeploymentOption DeploymentModelOption = "ARM"
+	// RDFEDeploymentOption is an option for the deployment model slice in CoreVM which corresponds to Classic Azure
+	RDFEDeploymentOption DeploymentModelOption = "RDFE"
+
+	// PublicOption is an option for CloudAvailability for Azure Public Cloud
+	PublicOption CloudAvailabilityOption = "PublicAzure"
+
+	// ChinaOption is an option for CloudAvailability for Azure China Cloud
+	ChinaOption CloudAvailabilityOption = "Mooncake"
+
+	// GovCloud is an option for CloudAvailability for Azure US Government Cloud
+	GovCloud CloudAvailabilityOption = "Fairfax"
+
+	// Blackforest is an option for CloudAvailability for the German sovereign cloud
+	Blackforest CloudAvailabilityOption = "Blackforest"
+)
+
+// GetVMImages returns a map of VirtualMachineImages by version
+func (p *Plan) GetVMImages() map[string]VirtualMachineImage {
+	switch {
+	case p.PlanCoreVMDetail.VMImages != nil:
+		return p.PlanCoreVMDetail.VMImages
+	case p.PlanVirtualMachineDetail.VMImages != nil:
+		return p.PlanVirtualMachineDetail.VMImages
+	default:
+		return nil
+	}
+}

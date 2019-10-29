@@ -1,4 +1,4 @@
-package offers
+package offer
 
 import (
 	"context"

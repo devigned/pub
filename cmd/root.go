@@ -8,8 +8,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/devigned/pub/cmd/offers"
-	"github.com/devigned/pub/cmd/publishers"
+	"github.com/devigned/pub/cmd/offer"
+	"github.com/devigned/pub/cmd/plan"
+	"github.com/devigned/pub/cmd/publisher"
+	"github.com/devigned/pub/cmd/version"
 )
 
 func init() {
@@ -17,8 +19,10 @@ func init() {
 	log.SetFormatter(&log.TextFormatter{TimestampFormat: "2006-01-02 15:04:05", FullTimestamp: true})
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pub.yaml)")
 	rootCmd.PersistentFlags().StringVarP(&apiVersion, "api-version", "v", "2017-10-31", "the API version override")
-	rootCmd.AddCommand(offers.RootCmd(&apiVersion))
-	rootCmd.AddCommand(publishers.RootCmd(&apiVersion))
+	rootCmd.AddCommand(offer.RootCmd(&apiVersion))
+	rootCmd.AddCommand(publisher.RootCmd(&apiVersion))
+	rootCmd.AddCommand(plan.RootCmd(&apiVersion))
+	rootCmd.AddCommand(version.RootCmd(&apiVersion))
 }
 
 var (

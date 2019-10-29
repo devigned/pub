@@ -1,4 +1,4 @@
-package offers
+package offer
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 func init() {
 	showCmd.Flags().StringVarP(&showOfferArgs.PublisherID, "publisher-id", "p", "", "Publisher ID; For example, Contoso.")
 	_ = showCmd.MarkFlagRequired("publisher-id")
-	showCmd.Flags().StringVarP(&showOfferArgs.OfferID, "offer-id", "o", "", "Guid that uniquely identifies the offer.")
+	showCmd.Flags().StringVarP(&showOfferArgs.OfferID, "offer-id", "o", "", "String that uniquely identifies the offer.")
 	_ = showCmd.MarkFlagRequired("offer-id")
 	showCmd.Flags().IntVar(&showOfferArgs.Version, "version", -1, "Version of the offer being retrieved. By default, the latest offer version is retrieved")
 	showCmd.Flags().StringVar(&showOfferArgs.SlotID, "slot-id", "", "The slot from which the offer is to be retrieved, can be one of: Draft (default) retrieves the offer version currently in draft. Preview retrieves the offer version currently in preview. Production retrieves the offer version currently in production.")

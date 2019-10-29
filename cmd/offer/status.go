@@ -1,4 +1,4 @@
-package offers
+package offer
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 func init() {
 	statusCmd.Flags().StringVarP(&showOfferArgs.PublisherID, "publisher-id", "p", "", "Publisher ID; For example, Contoso.")
 	_ = statusCmd.MarkFlagRequired("publisher-id")
-	statusCmd.Flags().StringVarP(&showOfferArgs.OfferID, "offer-id", "o", "", "Guid that uniquely identifies the offer.")
+	statusCmd.Flags().StringVarP(&showOfferArgs.OfferID, "offer-id", "o", "", "String that uniquely identifies the offer.")
 	_ = statusCmd.MarkFlagRequired("offer-id")
 	rootCmd.AddCommand(statusCmd)
 }
