@@ -13,16 +13,16 @@ import (
 )
 
 func init() {
-	listCmd.Flags().StringVarP(&listOfferArgs.PublisherID, "publisher-id", "p", "", "publisher ID for your Cloud Partner Provider")
-	_ = listCmd.MarkFlagRequired("publisher-id")
+	listCmd.Flags().StringVarP(&listOfferArgs.Publisher, "publisher", "p", "", "publisher ID for your Cloud Partner Provider")
+	_ = listCmd.MarkFlagRequired("publisher")
 	rootCmd.AddCommand(listCmd)
 }
 
 type (
 	// ListOfferArgs are the arguments for `offers list` command
 	ListOfferArgs struct {
-		PublisherID string
-		APIVersion  string
+		Publisher  string
+		APIVersion string
 	}
 )
 
@@ -38,7 +38,7 @@ var (
 			}
 
 			offers, err := client.ListOffers(ctx, partner.ListOffersParams{
-				PublisherID: listOfferArgs.PublisherID,
+				PublisherID: listOfferArgs.Publisher,
 			})
 
 			if err != nil {

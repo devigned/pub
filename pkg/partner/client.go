@@ -88,11 +88,15 @@ type (
 var (
 	httpLogger MiddlewareFunc = func(next RestHandler) RestHandler {
 		return func(ctx context.Context, req *http.Request) (*http.Response, error) {
+			printErrLine := func(format string, args ...interface{}) {
+				_, _ = fmt.Fprintf(os.Stderr, format, args...)
+			}
+
 			requestDump, err := httputil.DumpRequest(req, true)
 			if err != nil {
-				fmt.Println(err)
+				printErrLine("+%v\n", err)
 			}
-			fmt.Println(string(requestDump))
+			printErrLine(string(requestDump))
 
 			res, err := next(ctx, req)
 			if err != nil {
@@ -101,9 +105,9 @@ var (
 
 			resDump, err := httputil.DumpResponse(res, true)
 			if err != nil {
-				fmt.Println(err)
+				printErrLine("+%v\n", err)
 			}
-			fmt.Println(string(resDump))
+			printErrLine(string(resDump))
 
 			return res, err
 		}
@@ -154,7 +158,7 @@ func (c *Client) PutOffer(ctx context.Context, offer *Offer) (*Offer, error) {
 	}
 
 	path := fmt.Sprintf("api/publishers/%s/offers/%s?api-version=%s", offer.PublisherID, offer.ID, c.APIVersion)
-	res, err := c.execute(ctx, http.MethodPut, path, bytes.NewReader(offerJSON))
+	res, err := c.execute(ctx, http.MethodPut, path, bytes.NewReader(offerJSON), IfMatches(offer.Etag))
 	defer closeResponse(ctx, res)
 
 	if err != nil {
@@ -251,12 +255,16 @@ func (c *Client) GetOffer(ctx context.Context, params ShowOfferParams) (*Offer, 
 		return nil, fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
 	}
 
-	var offers Offer
-	if err := json.Unmarshal(body, &offers); err != nil {
+	var offer Offer
+	if err := json.Unmarshal(body, &offer); err != nil {
 		return nil, err
 	}
 
-	return &offers, nil
+	if etag, ok := res.Header["Etag"]; ok {
+		offer.Etag = etag[0]
+	}
+
+	return &offer, nil
 }
 
 // GetOfferStatus gets the status of a given offer
@@ -407,5 +415,18 @@ func (s SimpleTokenProvider) WithAuthorization() autorest.PrepareDecorator {
 			r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("AZURE_TOKEN")))
 			return r, nil
 		})
+	}
+}
+
+// IfMatches applies an Etag to the request if it a non-default string is present
+func IfMatches(etag string) MiddlewareFunc {
+	return func(next RestHandler) RestHandler {
+		return func(ctx context.Context, req *http.Request) (*http.Response, error) {
+			if etag != "" {
+				req.Header.Add("If-Match", etag)
+			}
+
+			return next(ctx, req)
+		}
 	}
 }

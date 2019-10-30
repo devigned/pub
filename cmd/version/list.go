@@ -13,21 +13,21 @@ import (
 )
 
 func init() {
-	listCmd.Flags().StringVarP(&listVersionsArgs.PublisherID, "publisher-id", "p", "", "publisher ID for your Cloud Partner Provider")
-	_ = listCmd.MarkFlagRequired("publisher-id")
-	listCmd.Flags().StringVarP(&listVersionsArgs.OfferID, "offer-id", "o", "", "String that uniquely identifies the offer.")
-	_ = listCmd.MarkFlagRequired("offer-id")
-	listCmd.Flags().StringVar(&listVersionsArgs.PlanID, "plan-id", "", "String that uniquely identifies the plan.")
-	_ = listCmd.MarkFlagRequired("plan-id")
+	listCmd.Flags().StringVarP(&listVersionsArgs.Publisher, "publisher", "p", "", "publisher ID for your Cloud Partner Provider")
+	_ = listCmd.MarkFlagRequired("publisher")
+	listCmd.Flags().StringVarP(&listVersionsArgs.Offer, "offer", "o", "", "String that uniquely identifies the offer.")
+	_ = listCmd.MarkFlagRequired("offer")
+	listCmd.Flags().StringVar(&listVersionsArgs.Plan, "plan", "", "String that uniquely identifies the plan.")
+	_ = listCmd.MarkFlagRequired("plan")
 	rootCmd.AddCommand(listCmd)
 }
 
 type (
 	// ListVersionsArgs are the arguments for `versions list` command
 	ListVersionsArgs struct {
-		PublisherID string
-		OfferID     string
-		PlanID      string
+		Publisher string
+		Offer     string
+		Plan      string
 	}
 )
 
@@ -43,8 +43,8 @@ var (
 			}
 
 			offer, err := client.GetOffer(ctx, partner.ShowOfferParams{
-				PublisherID: listVersionsArgs.PublisherID,
-				OfferID:     listVersionsArgs.OfferID,
+				PublisherID: listVersionsArgs.Publisher,
+				OfferID:     listVersionsArgs.Offer,
 			})
 
 			if err != nil {
@@ -53,7 +53,7 @@ var (
 
 			var versions map[string]partner.VirtualMachineImage
 			for _, plan := range offer.Definition.Plans {
-				if plan.ID == listVersionsArgs.PlanID {
+				if plan.ID == listVersionsArgs.Plan {
 					versions = plan.GetVMImages()
 					break
 				}

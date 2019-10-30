@@ -13,9 +13,9 @@ import (
 )
 
 func init() {
-	statusCmd.Flags().StringVarP(&showOfferArgs.PublisherID, "publisher-id", "p", "", "Publisher ID; For example, Contoso.")
+	statusCmd.Flags().StringVarP(&showOfferArgs.Publisher, "publisher-id", "p", "", "Publisher ID; For example, Contoso.")
 	_ = statusCmd.MarkFlagRequired("publisher-id")
-	statusCmd.Flags().StringVarP(&showOfferArgs.OfferID, "offer-id", "o", "", "String that uniquely identifies the offer.")
+	statusCmd.Flags().StringVarP(&showOfferArgs.Offer, "offer-id", "o", "", "String that uniquely identifies the offer.")
 	_ = statusCmd.MarkFlagRequired("offer-id")
 	rootCmd.AddCommand(statusCmd)
 }
@@ -35,8 +35,8 @@ var (
 			}
 
 			status, err := client.GetOfferStatus(ctx, partner.ShowOfferParams{
-				PublisherID: showOfferArgs.PublisherID,
-				OfferID:     showOfferArgs.OfferID,
+				PublisherID: showOfferArgs.Publisher,
+				OfferID:     showOfferArgs.Offer,
 			})
 			if err != nil {
 				log.Printf("error: %v", err)

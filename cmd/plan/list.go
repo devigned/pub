@@ -13,18 +13,18 @@ import (
 )
 
 func init() {
-	listCmd.Flags().StringVarP(&listPlansArgs.PublisherID, "publisher-id", "p", "", "publisher ID for your Cloud Partner Provider")
-	_ = listCmd.MarkFlagRequired("publisher-id")
-	listCmd.Flags().StringVarP(&listPlansArgs.OfferID, "offer-id", "o", "", "String that uniquely identifies the offer.")
-	_ = listCmd.MarkFlagRequired("offer-id")
+	listCmd.Flags().StringVarP(&listPlansArgs.Publisher, "publisher", "p", "", "publisher ID for your Cloud Partner Provider")
+	_ = listCmd.MarkFlagRequired("publisher")
+	listCmd.Flags().StringVarP(&listPlansArgs.Offer, "offer", "o", "", "String that uniquely identifies the offer.")
+	_ = listCmd.MarkFlagRequired("offer")
 	rootCmd.AddCommand(listCmd)
 }
 
 type (
 	// ListPlansArgs are the arguments for `plans list` command
 	ListPlansArgs struct {
-		PublisherID string
-		OfferID     string
+		Publisher string
+		Offer     string
 	}
 )
 
@@ -40,8 +40,8 @@ var (
 			}
 
 			offer, err := client.GetOffer(ctx, partner.ShowOfferParams{
-				PublisherID: listPlansArgs.PublisherID,
-				OfferID:     listPlansArgs.OfferID,
+				PublisherID: listPlansArgs.Publisher,
+				OfferID:     listPlansArgs.Offer,
 			})
 
 			if err != nil {

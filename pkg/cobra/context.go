@@ -2,6 +2,7 @@ package cobra
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 
@@ -29,4 +30,9 @@ func RunWithCtx(run func(ctx context.Context, cmd *cobra.Command, args []string)
 
 		run(ctx, cmd, args)
 	}
+}
+
+// PrintfErr prints a formatted string to Stderr
+func PrintfErr(format string, args ...interface{}) {
+	_, _ = fmt.Fprintf(os.Stderr, format, args...)
 }

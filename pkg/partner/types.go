@@ -183,6 +183,7 @@ type (
 		IsVersionUpgradeRequest bool            `json:"isvUpgradeRequest,omitempty"`
 		Definition              OfferDefinition `json:"definition,omitempty"`
 		ChangedTime             date.Time       `json:"changedTime,omitempty"`
+		Etag                    string
 	}
 
 	// StatusMessage is a message associated with OfferStatus / StatusSteps
@@ -243,6 +244,16 @@ var (
 	// Blackforest is an option for CloudAvailability for the German sovereign cloud
 	Blackforest CloudAvailabilityOption = "Blackforest"
 )
+
+// GetPlanByID will return the named plan if it exists in the offer or nil
+func (o *Offer) GetPlanByID(planID string) *Plan {
+	for _, plan := range o.Definition.Plans {
+		if plan.ID == planID {
+			return &plan
+		}
+	}
+	return nil
+}
 
 // GetVMImages returns a map of VirtualMachineImages by version
 func (p *Plan) GetVMImages() map[string]VirtualMachineImage {
