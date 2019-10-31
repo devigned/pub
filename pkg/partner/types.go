@@ -151,7 +151,7 @@ type (
 		MigratedOffer              *bool                          `json:"microsoft-azure-corevm.migratedOffer,omitempty"`
 	}
 
-	// Plan maps to a SKU in the marketplace
+	// Plan maps to a SKU in the marketplace. In the API it is referred to as a Plan rather than SKU as it is in the UI.
 	Plan struct {
 		ID      string   `json:"planId,omitempty"`
 		Regions []string `json:"regions,omitempty"`
@@ -223,6 +223,37 @@ type (
 		Description          string   `json:"microsoft-azure-corevm.description,omitempty"`
 		AllowedSubscriptions []string `json:"microsoft-azure-corevm.allowedSubscriptions,omitempty"`
 		LeadDestination      string   `json:"microsoft-azure-corevm.leadDestination,omitempty"`
+	}
+
+	// PublishMetadata is metadata structure within a publish request
+	PublishMetadata struct {
+		NotificationEmails []string `json:"notification-emails,omitempty"`
+	}
+
+	// Publish is the structure returned during a publish request
+	Publish struct {
+		Metadata PublishMetadata `json:"metadata,omitempty"`
+	}
+
+	// OperationDefinition provides details about the operation
+	OperationDefinition struct {
+		Metadata map[string]interface{} `json:"metadata,omitempty"`
+	}
+
+	// Operation is the structure returned from list operations
+	Operation struct {
+		Entity
+		OfferID           string              `json:"offerId,omitempty"`
+		OfferVersion      *int                `json:"offerVersion,omitempty"`
+		OfferTypeID       string              `json:"offerTypeId,omitempty"`
+		PublisherID       string              `json:"publisherId,omitempty"`
+		SubmissionType    string              `json:"submissionType,omitempty"`
+		SubmissionState   string              `json:"submissionState,omitempty"`
+		PublishingVersion *int                `json:"publishingVersion,omitempty"`
+		Slot              string              `json:"slot,omitempty"`
+		Version           *int                `json:"version,omitempty"`
+		Definition        OperationDefinition `json:"definition,omitempty"`
+		ChangedTime       date.Time           `json:"changedTime,omitempty"`
 	}
 )
 

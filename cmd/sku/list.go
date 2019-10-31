@@ -1,4 +1,4 @@
-package plan
+package sku
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	cobraExt "github.com/devigned/pub/pkg/cobra"
 	"github.com/devigned/pub/pkg/partner"
+	"github.com/devigned/pub/pkg/xcobra"
 )
 
 func init() {
@@ -32,8 +32,8 @@ var (
 	listPlansArgs ListPlansArgs
 	listCmd       = &cobra.Command{
 		Use:   "list",
-		Short: "list all plans for a given offer and publisher",
-		Run: cobraExt.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+		Short: "list all SKUs for a given offer and publisher",
+		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
 			client, err := getClient()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
@@ -45,7 +45,7 @@ var (
 			})
 
 			if err != nil {
-				log.Fatalf("unable to list offers: %v", err)
+				log.Fatalf("unable to fetch the offer: %v", err)
 			}
 
 			printPlans(offer.Definition.Plans)
@@ -56,7 +56,7 @@ var (
 func printPlans(plans []partner.Plan) {
 	bits, err := json.Marshal(plans)
 	if err != nil {
-		log.Fatalf("failed to print plans: %v", err)
+		log.Fatalf("failed to print SKUs: %v", err)
 	}
 	fmt.Print(string(bits))
 }

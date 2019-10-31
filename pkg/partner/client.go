@@ -81,6 +81,20 @@ type (
 		SlotID      string
 	}
 
+	// PublishOfferParams is the parameter for the publish offer operation
+	PublishOfferParams struct {
+		NotificationEmails []string
+		OfferID            string
+		PublisherID        string
+	}
+
+	// ListOperationsParams is the parameter for the list operations operation
+	ListOperationsParams struct {
+		PublisherID    string
+		OfferID        string
+		FilteredStatus string
+	}
+
 	// SimpleTokenProvider makes it easy to authorize with a string bearer token
 	SimpleTokenProvider struct{}
 )
@@ -148,6 +162,71 @@ func New(apiVersion string, opts ...ClientOption) (*Client, error) {
 	}
 
 	return c, nil
+}
+
+// ListOperations will fetch operations for a given offer
+func (c *Client) ListOperations(ctx context.Context, params ListOperationsParams) ([]Operation, error) {
+	path := fmt.Sprintf("api/publishers/%s/offers/%s/submissions/?api-version=%s", params.PublisherID, params.OfferID, c.APIVersion)
+	if params.FilteredStatus != "" {
+		path = fmt.Sprintf("%s&submissionState=%s", path, params.FilteredStatus)
+	}
+
+	res, err := c.execute(ctx, http.MethodGet, path, nil)
+	defer closeResponse(ctx, res)
+
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode > 299 {
+		return nil, fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
+	}
+
+	var ops []Operation
+	if err := json.Unmarshal(body, &ops); err != nil {
+		return nil, err
+	}
+
+	return ops, nil
+}
+
+// PublishOffer starts the publish process for the offer. This is a long running operation, so the method returns a
+// uri which can be used to query the status of the operation.
+func (c *Client) PublishOffer(ctx context.Context, publishParams PublishOfferParams) (string, error) {
+	pubJSON, err := json.Marshal(Publish{
+		Metadata: PublishMetadata{
+			NotificationEmails: publishParams.NotificationEmails,
+		},
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	path := fmt.Sprintf("api/publishers/%s/offers/%s/publish?api-version=%s", publishParams.PublisherID, publishParams.OfferID, c.APIVersion)
+	res, err := c.execute(ctx, http.MethodPost, path, bytes.NewReader(pubJSON))
+	defer closeResponse(ctx, res)
+
+	if err != nil {
+		return "", err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if res.StatusCode > 299 {
+		return "", fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
+	}
+
+	// return the location for the operation status
+	return res.Header.Get("Operation-Location"), nil
 }
 
 // PutOffer will PUT an offer to the API and return the offer

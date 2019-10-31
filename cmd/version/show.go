@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	cobraExt "github.com/devigned/pub/pkg/cobra"
 	"github.com/devigned/pub/pkg/partner"
+	"github.com/devigned/pub/pkg/xcobra"
 )
 
 func init() {
@@ -17,8 +17,8 @@ func init() {
 	_ = showCmd.MarkFlagRequired("publisher")
 	showCmd.Flags().StringVarP(&showVersionsArgs.Offer, "offer", "o", "", "String that uniquely identifies the offer.")
 	_ = showCmd.MarkFlagRequired("offer")
-	showCmd.Flags().StringVar(&showVersionsArgs.Plan, "plan", "", "String that uniquely identifies the plan.")
-	_ = showCmd.MarkFlagRequired("plan")
+	showCmd.Flags().StringVarP(&showVersionsArgs.SKU, "sku", "s", "", "String that uniquely identifies the SKU (SKU ID).")
+	_ = showCmd.MarkFlagRequired("sku")
 	showCmd.Flags().StringVar(&showVersionsArgs.Version, "version", "", "String that uniquely identifies the version.")
 	_ = showCmd.MarkFlagRequired("version")
 	rootCmd.AddCommand(showCmd)
@@ -29,7 +29,7 @@ type (
 	ShowVersionsArgs struct {
 		PublisherID string
 		Offer       string
-		Plan        string
+		SKU         string
 		Version     string
 	}
 )
@@ -39,7 +39,7 @@ var (
 	showCmd          = &cobra.Command{
 		Use:   "show",
 		Short: "show a version for a given plan",
-		Run: cobraExt.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
 			client, err := getClient()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
@@ -56,7 +56,7 @@ var (
 
 			var versions map[string]partner.VirtualMachineImage
 			for _, plan := range offer.Definition.Plans {
-				if plan.ID == showVersionsArgs.Plan {
+				if plan.ID == showVersionsArgs.SKU {
 					versions = plan.GetVMImages()
 					break
 				}

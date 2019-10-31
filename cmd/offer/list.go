@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	cobraExt "github.com/devigned/pub/pkg/cobra"
 	"github.com/devigned/pub/pkg/partner"
+	"github.com/devigned/pub/pkg/xcobra"
 )
 
 func init() {
@@ -31,7 +31,7 @@ var (
 	listCmd       = &cobra.Command{
 		Use:   "list",
 		Short: "list all offers",
-		Run: cobraExt.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
 			client, err := getClient()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)

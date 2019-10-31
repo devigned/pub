@@ -1,4 +1,4 @@
-package plan
+package operation
 
 import (
 	"github.com/spf13/cobra"
@@ -9,8 +9,8 @@ import (
 var (
 	defaultAPIVersion *string
 	rootCmd           = &cobra.Command{
-		Use:              "plans",
-		Short:            "a group of actions for working with plans",
+		Use:              "operations",
+		Short:            "a group of actions for working with offer operations",
 		TraverseChildren: true,
 	}
 )

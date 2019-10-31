@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	cobraExt "github.com/devigned/pub/pkg/cobra"
+	"github.com/devigned/pub/pkg/xcobra"
 )
 
 func init() {
@@ -25,7 +25,7 @@ var (
 	putCmd       = &cobra.Command{
 		Use:   "put",
 		Short: "create or update an offer",
-		Run: cobraExt.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
 
 		}),
 	}

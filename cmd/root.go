@@ -9,8 +9,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/devigned/pub/cmd/offer"
-	"github.com/devigned/pub/cmd/plan"
+	"github.com/devigned/pub/cmd/operation"
 	"github.com/devigned/pub/cmd/publisher"
+	"github.com/devigned/pub/cmd/sku"
 	"github.com/devigned/pub/cmd/version"
 )
 
@@ -21,8 +22,9 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&apiVersion, "api-version", "v", "2017-10-31", "the API version override")
 	rootCmd.AddCommand(offer.RootCmd(&apiVersion))
 	rootCmd.AddCommand(publisher.RootCmd(&apiVersion))
-	rootCmd.AddCommand(plan.RootCmd(&apiVersion))
+	rootCmd.AddCommand(sku.RootCmd(&apiVersion))
 	rootCmd.AddCommand(version.RootCmd(&apiVersion))
+	rootCmd.AddCommand(operation.RootCmd(&apiVersion))
 }
 
 var (

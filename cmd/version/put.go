@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	cobraExt "github.com/devigned/pub/pkg/cobra"
 	"github.com/devigned/pub/pkg/partner"
+	"github.com/devigned/pub/pkg/xcobra"
 
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -19,8 +19,8 @@ func init() {
 		_ = cmd.MarkFlagRequired("publisher")
 		cmd.Flags().StringVarP(&putImageVersionsArgs.Offer, "offer", "o", "", "String that uniquely identifies the offer.")
 		_ = cmd.MarkFlagRequired("offer")
-		cmd.Flags().StringVar(&putImageVersionsArgs.Plan, "plan", "", "String that uniquely identifies the plan.")
-		_ = cmd.MarkFlagRequired("plan")
+		cmd.Flags().StringVarP(&putImageVersionsArgs.SKU, "sku", "s", "", "String that uniquely identifies the SKU (SKU ID).")
+		_ = cmd.MarkFlagRequired("sku")
 		cmd.Flags().StringVar(&putImageVersionsArgs.Version, "version", "", "String that uniquely identifies the version.")
 		_ = cmd.MarkFlagRequired("version")
 
@@ -44,7 +44,7 @@ type (
 	PutImageVersionsArgs struct {
 		PublisherID string
 		Offer       string
-		Plan        string
+		SKU         string
 		Version     string
 		Image       partner.VirtualMachineImage
 	}
@@ -86,7 +86,7 @@ var (
 )
 
 func getAndPutMutatedPlan(mutator func(plan *partner.Plan, version string, vm partner.VirtualMachineImage)) func(cmd *cobra.Command, args []string) {
-	return cobraExt.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+	return xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
 		client, err := getClient()
 		if err != nil {
 			log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
@@ -98,14 +98,14 @@ func getAndPutMutatedPlan(mutator func(plan *partner.Plan, version string, vm pa
 		})
 
 		if err != nil {
-			cobraExt.PrintfErr("unable to list offers: %v", err)
+			xcobra.PrintfErr("unable to list offers: %v", err)
 			os.Exit(1)
 		}
 
-		plan := offer.GetPlanByID(putImageVersionsArgs.Plan)
+		plan := offer.GetPlanByID(putImageVersionsArgs.SKU)
 
 		if plan == nil {
-			cobraExt.PrintfErr("no plan was found")
+			xcobra.PrintfErr("no plan was found")
 			return
 		}
 
@@ -113,10 +113,10 @@ func getAndPutMutatedPlan(mutator func(plan *partner.Plan, version string, vm pa
 
 		offer, err = client.PutOffer(ctx, offer)
 		if err != nil {
-			cobraExt.PrintfErr("unable to list offers: %v", err)
+			xcobra.PrintfErr("unable to list offers: %v", err)
 			os.Exit(1)
 		}
 
-		printVersions(offer.GetPlanByID(putImageVersionsArgs.Plan).GetVMImages())
+		printVersions(offer.GetPlanByID(putImageVersionsArgs.SKU).GetVMImages())
 	})
 }
