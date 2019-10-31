@@ -11,15 +11,11 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(publishCmd)
-}
-
-func init() {
 	publishCmd.Flags().StringVarP(&publishOfferArgs.Publisher, "publisher", "p", "", "Publisher ID; For example, Contoso.")
 	_ = publishCmd.MarkFlagRequired("publisher")
 	publishCmd.Flags().StringVarP(&publishOfferArgs.Offer, "offer", "o", "", "String that uniquely identifies the offer.")
 	_ = publishCmd.MarkFlagRequired("offer")
-	publishCmd.Flags().StringSliceVarP(&publishOfferArgs.NotificationEmails, "notification-emails", "e", []string{}, "Emails to notify when publication completes.")
+	publishCmd.Flags().StringVarP(&publishOfferArgs.NotificationEmails, "notification-emails", "e", "", "Comma separated list of emails to notify when publication completes.")
 	rootCmd.AddCommand(publishCmd)
 }
 
@@ -28,7 +24,7 @@ type (
 	PublishOfferArgs struct {
 		Publisher          string
 		Offer              string
-		NotificationEmails []string
+		NotificationEmails string
 	}
 )
 
@@ -40,7 +36,7 @@ var (
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
 			client, err := getClient()
 			if err != nil {
-				xcobra.PrintfErr("%v\n", err)
+				xcobra.PrintfErrAndExit(1, "%v\n", err)
 			}
 
 			opLocation, err := client.PublishOffer(ctx, partner.PublishOfferParams{
@@ -48,6 +44,10 @@ var (
 				OfferID:            publishOfferArgs.Offer,
 				PublisherID:        publishOfferArgs.Publisher,
 			})
+
+			if err != nil {
+				xcobra.PrintfErrAndExit(1, "%v\n", err)
+			}
 
 			fmt.Println(opLocation)
 		}),

@@ -3,7 +3,6 @@ package version
 import (
 	"context"
 	"log"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -98,23 +97,20 @@ func getAndPutMutatedPlan(mutator func(plan *partner.Plan, version string, vm pa
 		})
 
 		if err != nil {
-			xcobra.PrintfErr("unable to list offers: %v", err)
-			os.Exit(1)
+			xcobra.PrintfErrAndExit(1, "unable to list offers: %v", err)
 		}
 
 		plan := offer.GetPlanByID(putImageVersionsArgs.SKU)
 
 		if plan == nil {
-			xcobra.PrintfErr("no plan was found")
-			return
+			xcobra.PrintfErrAndExit(1, "no plan was found")
 		}
 
 		mutator(plan, putImageVersionsArgs.Version, putImageVersionsArgs.Image)
 
 		offer, err = client.PutOffer(ctx, offer)
 		if err != nil {
-			xcobra.PrintfErr("unable to list offers: %v", err)
-			os.Exit(1)
+			xcobra.PrintfErrAndExit(1, "unable to list offers: %v", err)
 		}
 
 		printVersions(offer.GetPlanByID(putImageVersionsArgs.SKU).GetVMImages())

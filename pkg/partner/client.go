@@ -83,7 +83,7 @@ type (
 
 	// PublishOfferParams is the parameter for the publish offer operation
 	PublishOfferParams struct {
-		NotificationEmails []string
+		NotificationEmails string // comma separated list
 		OfferID            string
 		PublisherID        string
 	}
@@ -93,6 +93,27 @@ type (
 		PublisherID    string
 		OfferID        string
 		FilteredStatus string
+	}
+
+	// GetOperationParams is the parameter for the get operations operation
+	GetOperationParams struct {
+		PublisherID string
+		OfferID     string
+		OperationID string
+	}
+
+	// CancelOperationParams is the parameter for the cancel operation operation
+	CancelOperationParams struct {
+		PublisherID        string
+		OfferID            string
+		NotificationEmails string // comma separated list
+	}
+
+	// GoLiveParams is the parameter for the go live offer operation
+	GoLiveParams struct {
+		OfferID            string
+		PublisherID        string
+		NotificationEmails string // comma separated list
 	}
 
 	// SimpleTokenProvider makes it easy to authorize with a string bearer token
@@ -164,6 +185,61 @@ func New(apiVersion string, opts ...ClientOption) (*Client, error) {
 	return c, nil
 }
 
+// CancelOperation cancels the currently active operation on an offer
+func (c *Client) CancelOperation(ctx context.Context, params CancelOperationParams) (string, error) {
+	path := fmt.Sprintf("api/publishers/%s/offers/%s/cancel?api-version=%s", params.PublisherID, params.OfferID, c.APIVersion)
+	res, err := c.execute(ctx, http.MethodPost, path, nil)
+	defer closeResponse(ctx, res)
+
+	if err != nil {
+		return "", err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if res.StatusCode > 299 {
+		return "", fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
+	}
+
+	var op OperationDetail
+	if err := json.Unmarshal(body, &op); err != nil {
+		return "", err
+	}
+
+	// return the location for the operation status
+	return res.Header.Get("Operation-Location"), nil
+}
+
+// GetOperation returns a single operation by ID
+func (c *Client) GetOperation(ctx context.Context, params GetOperationParams) (*OperationDetail, error) {
+	path := fmt.Sprintf("api/publishers/%s/offers/%s/operations/%s/?api-version=%s", params.PublisherID, params.OfferID, params.OperationID, c.APIVersion)
+	res, err := c.execute(ctx, http.MethodGet, path, nil)
+	defer closeResponse(ctx, res)
+
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode > 299 {
+		return nil, fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
+	}
+
+	var op OperationDetail
+	if err := json.Unmarshal(body, &op); err != nil {
+		return nil, err
+	}
+
+	return &op, nil
+}
+
 // ListOperations will fetch operations for a given offer
 func (c *Client) ListOperations(ctx context.Context, params ListOperationsParams) ([]Operation, error) {
 	path := fmt.Sprintf("api/publishers/%s/offers/%s/submissions/?api-version=%s", params.PublisherID, params.OfferID, c.APIVersion)
@@ -193,6 +269,40 @@ func (c *Client) ListOperations(ctx context.Context, params ListOperationsParams
 	}
 
 	return ops, nil
+}
+
+// GoLiveWithOffer opens a published offer to the world, not just the preview subscriptions
+func (c *Client) GoLiveWithOffer(ctx context.Context, params GoLiveParams) (string, error) {
+	path := fmt.Sprintf("api/publishers/%s/offers/%s/golive?api-version=%s", params.PublisherID, params.OfferID, c.APIVersion)
+	bodyJSON, err := json.Marshal(Publish{
+		Metadata: PublishMetadata{
+			NotificationEmails: params.NotificationEmails,
+		},
+	})
+
+	res, err := c.execute(ctx, http.MethodPost, path, bytes.NewReader(bodyJSON))
+	defer closeResponse(ctx, res)
+
+	if err != nil {
+		return "", err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if res.StatusCode > 299 {
+		return "", fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
+	}
+
+	var op OperationDetail
+	if err := json.Unmarshal(body, &op); err != nil {
+		return "", err
+	}
+
+	// return the location for the operation status
+	return res.Header.Get("Operation-Location"), nil
 }
 
 // PublishOffer starts the publish process for the offer. This is a long running operation, so the method returns a

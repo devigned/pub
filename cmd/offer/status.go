@@ -13,10 +13,10 @@ import (
 )
 
 func init() {
-	statusCmd.Flags().StringVarP(&showOfferArgs.Publisher, "publisher-id", "p", "", "Publisher ID; For example, Contoso.")
-	_ = statusCmd.MarkFlagRequired("publisher-id")
-	statusCmd.Flags().StringVarP(&showOfferArgs.Offer, "offer-id", "o", "", "String that uniquely identifies the offer.")
-	_ = statusCmd.MarkFlagRequired("offer-id")
+	statusCmd.Flags().StringVarP(&showOfferArgs.Publisher, "publisher", "p", "", "Publisher ID; For example, Contoso.")
+	_ = statusCmd.MarkFlagRequired("publisher")
+	statusCmd.Flags().StringVarP(&showOfferArgs.Offer, "offer", "o", "", "String that uniquely identifies the offer.")
+	_ = statusCmd.MarkFlagRequired("offer")
 	rootCmd.AddCommand(statusCmd)
 }
 

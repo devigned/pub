@@ -211,7 +211,7 @@ type (
 		Steps              []StatusStep    `json:"steps,omitempty"`
 		PreviewLinks       []string        `json:"previewLinks,omitempty"`
 		LiveLinks          []string        `json:"liveLinks,omitempty"`
-		NotificationEmails []string        `json:"notificationEmails,omitempty"`
+		NotificationEmails string          `json:"notificationEmails,omitempty"`
 	}
 
 	// CoreVMOfferDetail is the core vm structure
@@ -227,7 +227,7 @@ type (
 
 	// PublishMetadata is metadata structure within a publish request
 	PublishMetadata struct {
-		NotificationEmails []string `json:"notification-emails,omitempty"`
+		NotificationEmails string `json:"notification-emails,omitempty"`
 	}
 
 	// Publish is the structure returned during a publish request
@@ -254,6 +254,19 @@ type (
 		Version           *int                `json:"version,omitempty"`
 		Definition        OperationDefinition `json:"definition,omitempty"`
 		ChangedTime       date.Time           `json:"changedTime,omitempty"`
+	}
+
+	// OperationDetail is what is returned when querying for a single operation
+	OperationDetail struct {
+		PublishingVersion        *int            `json:"publishingVersion,omitempty"`
+		OfferVersion             *int            `json:"offerVersion,omitempty"`
+		CancellationRequestState string          `json:"cancellationRequestState,omitempty"`
+		Status                   string          `json:"status,omitempty"`
+		Messages                 []StatusMessage `json:"messages,omitempty"`
+		Steps                    []StatusStep    `json:"steps,omitempty"`
+		PreviewLinks             []string        `json:"previewLinks,omitempty"`
+		LiveLinks                []string        `json:"liveLinks,omitempty"`
+		NotificationEmails       string          `json:"notificationEmails,omitempty"`
 	}
 )
 

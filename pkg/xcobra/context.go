@@ -36,3 +36,9 @@ func RunWithCtx(run func(ctx context.Context, cmd *cobra.Command, args []string)
 func PrintfErr(format string, args ...interface{}) {
 	_, _ = fmt.Fprintf(os.Stderr, format, args...)
 }
+
+// PrintfErrAndExit prints a formatted string to Stderr and exits with code
+func PrintfErrAndExit(code int, format string, args ...interface{}) {
+	PrintfErr(format, args...)
+	os.Exit(code)
+}

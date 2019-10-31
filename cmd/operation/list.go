@@ -37,7 +37,7 @@ var (
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
 			client, err := getClient()
 			if err != nil {
-				xcobra.PrintfErr("unable to create Cloud Partner Portal client: %v", err)
+				xcobra.PrintfErrAndExit(1, "unable to create Cloud Partner Portal client: %v", err)
 			}
 
 			ops, err := client.ListOperations(ctx, partner.ListOperationsParams{
@@ -47,7 +47,7 @@ var (
 			})
 
 			if err != nil {
-				xcobra.PrintfErr("unable to fetch operations: %v", err)
+				xcobra.PrintfErrAndExit(1, "unable to fetch operations: %v", err)
 			}
 
 			printOps(ops)
@@ -58,7 +58,7 @@ var (
 func printOps(ops []partner.Operation) {
 	bits, err := json.Marshal(ops)
 	if err != nil {
-		xcobra.PrintfErr("failed to print operations: %v", err)
+		xcobra.PrintfErrAndExit(1, "failed to print operations: %v", err)
 	}
 	fmt.Print(string(bits))
 }
