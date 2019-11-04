@@ -1,5 +1,7 @@
 # Pub: cmd line for the Azure Cloud Partner Portal
 
+[![Actions Status](https://github.com/devigned/pub/workflows/ci/badge.svg)](https://github.com/devigned/pub/actions)
+
 Pub enables command line automation for working with offers on 
 [Azure Marketplace](https://azuremarketplace.microsoft.com/) and on 
 [AppSource](https://appsource.microsoft.com/). For more information on the Cloud Partner
