@@ -3,7 +3,7 @@ PACKAGE  		= github.com/devigned/$(APP)
 DATE    		?= $(shell date +%FT%T%z)
 VERSION 		?= $(shell git rev-list -1 HEAD)
 SHORT_VERSION 	?= $(shell git rev-parse --short HEAD)
-BIN      		= $(GOPATH)/bin
+GOBIN      		?= $(HOME)/go/bin
 GOFMT   		= gofmt
 GO      		= go
 PKGS     		= $(or $(PKG),$(shell $(GO) list ./... | grep -vE "^$(PACKAGE)/templates/"))
@@ -15,9 +15,9 @@ Q = $(if $(filter 1,$V),,@)
 all: fmt lint vet tidy build
 
 
-GOLINT = $(BIN)/golint
-$(BIN)/golint: ; $(info $(M) building golint…)
-	$Q $(GO) get -u github.com/golang/lint/golint
+GOLINT = $(GOBIN)/golint
+$(GOBIN)/golint: ; $(info $(M) building golint…)
+	$(GO) get -u golang.org/x/lint/golint
 
 build: lint tidy ; $(info $(M) buiding ./bin/pub)
 	$Q $(GO)  build -ldflags "-X $(PACKAGE)/cmd.GitCommit=$(VERSION)" -o ./bin/$(APP)
