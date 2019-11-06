@@ -209,8 +209,8 @@ type (
 		Status             string          `json:"status,omitempty"`
 		Messages           []StatusMessage `json:"messages,omitempty"`
 		Steps              []StatusStep    `json:"steps,omitempty"`
-		PreviewLinks       []PreviewLink   `json:"previewLinks,omitempty"`
-		LiveLinks          []string        `json:"liveLinks,omitempty"`
+		PreviewLinks       []Link          `json:"previewLinks,omitempty"`
+		LiveLinks          []Link          `json:"liveLinks,omitempty"`
 		NotificationEmails string          `json:"notificationEmails,omitempty"`
 	}
 
@@ -256,8 +256,8 @@ type (
 		ChangedTime       date.Time           `json:"changedTime,omitempty"`
 	}
 
-	// PreviewLink is the structure of a preview link in an OfferStatus
-	PreviewLink struct {
+	// Link is the structure of a link in an OfferStatus
+	Link struct {
 		DisplayText string
 		URI         string
 	}
@@ -270,8 +270,8 @@ type (
 		Status                   string          `json:"status,omitempty"`
 		Messages                 []StatusMessage `json:"messages,omitempty"`
 		Steps                    []StatusStep    `json:"steps,omitempty"`
-		PreviewLinks             []PreviewLink   `json:"previewLinks,omitempty"`
-		LiveLinks                []string        `json:"liveLinks,omitempty"`
+		PreviewLinks             []Link          `json:"previewLinks,omitempty"`
+		LiveLinks                []Link          `json:"liveLinks,omitempty"`
 		NotificationEmails       string          `json:"notificationEmails,omitempty"`
 	}
 )
