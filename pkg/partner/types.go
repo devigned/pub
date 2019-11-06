@@ -209,7 +209,7 @@ type (
 		Status             string          `json:"status,omitempty"`
 		Messages           []StatusMessage `json:"messages,omitempty"`
 		Steps              []StatusStep    `json:"steps,omitempty"`
-		PreviewLinks       []string        `json:"previewLinks,omitempty"`
+		PreviewLinks       []PreviewLink   `json:"previewLinks,omitempty"`
 		LiveLinks          []string        `json:"liveLinks,omitempty"`
 		NotificationEmails string          `json:"notificationEmails,omitempty"`
 	}
@@ -256,6 +256,12 @@ type (
 		ChangedTime       date.Time           `json:"changedTime,omitempty"`
 	}
 
+	// PreviewLink is the structure of a preview link in an OfferStatus
+	PreviewLink struct {
+		DisplayText string
+		URI         string
+	}
+
 	// OperationDetail is what is returned when querying for a single operation
 	OperationDetail struct {
 		PublishingVersion        *int            `json:"publishingVersion,omitempty"`
@@ -264,7 +270,7 @@ type (
 		Status                   string          `json:"status,omitempty"`
 		Messages                 []StatusMessage `json:"messages,omitempty"`
 		Steps                    []StatusStep    `json:"steps,omitempty"`
-		PreviewLinks             []string        `json:"previewLinks,omitempty"`
+		PreviewLinks             []PreviewLink   `json:"previewLinks,omitempty"`
 		LiveLinks                []string        `json:"liveLinks,omitempty"`
 		NotificationEmails       string          `json:"notificationEmails,omitempty"`
 	}
