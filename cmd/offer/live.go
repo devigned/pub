@@ -40,9 +40,9 @@ var (
 			}
 
 			opLocation, err := client.GoLiveWithOffer(ctx, partner.GoLiveParams{
-				NotificationEmails: publishOfferArgs.NotificationEmails,
-				OfferID:            publishOfferArgs.Offer,
-				PublisherID:        publishOfferArgs.Publisher,
+				NotificationEmails: goLiveOfferArgs.NotificationEmails,
+				OfferID:            goLiveOfferArgs.Offer,
+				PublisherID:        goLiveOfferArgs.Publisher,
 			})
 
 			if err != nil {

@@ -185,6 +185,32 @@ func New(apiVersion string, opts ...ClientOption) (*Client, error) {
 	return c, nil
 }
 
+// GetOperationByURI will fetch an operation given the path to the operation
+func (c *Client) GetOperationByURI(ctx context.Context, operationURI string) (*OperationDetail, error) {
+	res, err := c.execute(ctx, http.MethodGet, operationURI, nil)
+	defer closeResponse(ctx, res)
+
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode > 299 {
+		return nil, fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
+	}
+
+	var op OperationDetail
+	if err := json.Unmarshal(body, &op); err != nil {
+		return nil, err
+	}
+
+	return &op, nil
+}
+
 // CancelOperation cancels the currently active operation on an offer
 func (c *Client) CancelOperation(ctx context.Context, params CancelOperationParams) (string, error) {
 	path := fmt.Sprintf("api/publishers/%s/offers/%s/cancel?api-version=%s", params.PublisherID, params.OfferID, c.APIVersion)
@@ -202,11 +228,6 @@ func (c *Client) CancelOperation(ctx context.Context, params CancelOperationPara
 
 	if res.StatusCode > 299 {
 		return "", fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
-	}
-
-	var op OperationDetail
-	if err := json.Unmarshal(body, &op); err != nil {
-		return "", err
 	}
 
 	// return the location for the operation status
@@ -294,11 +315,6 @@ func (c *Client) GoLiveWithOffer(ctx context.Context, params GoLiveParams) (stri
 
 	if res.StatusCode > 299 {
 		return "", fmt.Errorf(fmt.Sprintf("uri: %s, status: %d, body: %s", res.Request.URL, res.StatusCode, body))
-	}
-
-	var op OperationDetail
-	if err := json.Unmarshal(body, &op); err != nil {
-		return "", err
 	}
 
 	// return the location for the operation status
