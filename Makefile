@@ -7,17 +7,16 @@ GOBIN      		?= $(HOME)/go/bin
 GOFMT   		= gofmt
 GO      		= go
 PKGS     		= $(or $(PKG),$(shell $(GO) list ./... | grep -vE "^$(PACKAGE)/templates/"))
+GOLINT			= $(GOBIN)/golint
 
 V = 0
 Q = $(if $(filter 1,$V),,@)
 
 .PHONY: all
-all: fmt lint vet tidy build
+all: install-tools fmt lint vet tidy build
 
-
-GOLINT = $(GOBIN)/golint
-$(GOBIN)/golint: ; $(info $(M) building golint…)
-	$(GO) get -u golang.org/x/lint/golint
+install-tools: ; $(info $(M) installing tools…)
+	$(Q) make -C ./tools
 
 build: lint tidy ; $(info $(M) buiding ./bin/pub)
 	$Q $(GO)  build -ldflags "-X $(PACKAGE)/cmd.GitCommit=$(VERSION)" -o ./bin/$(APP)
