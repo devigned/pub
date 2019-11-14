@@ -6,61 +6,75 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
 
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func init() {
-	for _, cmd := range []*cobra.Command{putCoreImageCmd, putImageCmd} {
-		cmd.Flags().StringVarP(&putImageVersionsArgs.PublisherID, "publisher", "p", "", "publisher ID for your Cloud Partner Provider")
-		_ = cmd.MarkFlagRequired("publisher")
-		cmd.Flags().StringVarP(&putImageVersionsArgs.Offer, "offer", "o", "", "String that uniquely identifies the offer.")
-		_ = cmd.MarkFlagRequired("offer")
-		cmd.Flags().StringVarP(&putImageVersionsArgs.SKU, "sku", "s", "", "String that uniquely identifies the SKU (SKU ID).")
-		_ = cmd.MarkFlagRequired("sku")
-		cmd.Flags().StringVar(&putImageVersionsArgs.Version, "version", "", "String that uniquely identifies the version.")
-		_ = cmd.MarkFlagRequired("version")
-
-		cmd.Flags().StringVar(&putImageVersionsArgs.Image.OSVHDURL, "vhd-uri", "", "Signed Azure classic storage blob containing a captured VHD")
-		_ = cmd.MarkFlagRequired("vhd-uri")
+type (
+	putImageVersionsArgs struct {
+		Publisher string
+		Offer     string
+		SKU       string
+		Version   string
+		Image     partner.VirtualMachineImage
 	}
 
-	putCoreImageCmd.Flags().StringVar(&putImageVersionsArgs.Image.MediaName, "media-name", "", "(optional) Name of the vm image (only used for CoreVM Type)")
-	putCoreImageCmd.Flags().StringVar(&putImageVersionsArgs.Image.Label, "label", "", "(optional) Label of the vm image (only used for CoreVM Type)")
-	putCoreImageCmd.Flags().StringVar(&putImageVersionsArgs.Image.Description, "desc", "", "(optional) Description of the vm image (only used for CoreVM Type)")
-	putImageVersionsArgs.Image.ShowInGui = to.BoolPtr(false)
-	putCoreImageCmd.Flags().BoolVar(putImageVersionsArgs.Image.ShowInGui, "show", false, "(optional) Show in GUI (only used for CoreVM Type)")
-
-	putCmd.AddCommand(putImageCmd)
-	putCmd.AddCommand(putCoreImageCmd)
-	rootCmd.AddCommand(putCmd)
-}
-
-type (
-	// PutImageVersionsArgs are the arguments for `versions put ` command
-	PutImageVersionsArgs struct {
-		PublisherID string
-		Offer       string
-		SKU         string
-		Version     string
-		Image       partner.VirtualMachineImage
+	// GetterPutter provides the ability to get and put an offer
+	GetterPutter interface {
+		Getter
+		PutOffer(ctx context.Context, offer *partner.Offer) (*partner.Offer, error)
 	}
 )
 
-var (
-	putImageVersionsArgs PutImageVersionsArgs
-
-	putCmd = &cobra.Command{
+func newPutCommand(clientFactory func() (GetterPutter, error)) (*cobra.Command, error) {
+	cmd := &cobra.Command{
 		Use:   "put",
 		Short: "put a version for a given plan",
 	}
 
-	putCoreImageCmd = &cobra.Command{
+	imageCmd, err := newPutImageCmd(clientFactory)
+	if err != nil {
+		return cmd, err
+	}
+
+	coreImageCmd, err := newPutCoreImageCmd(clientFactory)
+	if err != nil {
+		return cmd, err
+	}
+
+	cmd.AddCommand(coreImageCmd)
+	cmd.AddCommand(imageCmd)
+	return cmd, nil
+}
+
+func newPutImageCmd(cclientFactory func() (GetterPutter, error)) (*cobra.Command, error) {
+	var oArgs putImageVersionsArgs
+	cmd := &cobra.Command{
+		Use:   "image",
+		Short: "put a vm image version for a given plan",
+		Run: getAndPutMutatedPlan(cclientFactory, &oArgs, func(plan *partner.Plan, version string, vm partner.VirtualMachineImage) {
+			if plan.PlanVirtualMachineDetail.VMImages != nil {
+				plan.PlanVirtualMachineDetail.VMImages[version] = vm
+				return
+			}
+
+			plan.PlanVirtualMachineDetail.VMImages = map[string]partner.VirtualMachineImage{version: vm}
+		}),
+	}
+
+	cmd, err := bindPutArgs(cmd, &oArgs)
+	return cmd, err
+}
+
+func newPutCoreImageCmd(clientFactory func() (GetterPutter, error)) (*cobra.Command, error) {
+	var oArgs putImageVersionsArgs
+	cmd := &cobra.Command{
 		Use:   "corevm",
 		Short: "put a vm image version for a given plan",
-		Run: getAndPutMutatedPlan(func(plan *partner.Plan, version string, vm partner.VirtualMachineImage) {
+		Run: getAndPutMutatedPlan(clientFactory, &oArgs, func(plan *partner.Plan, version string, vm partner.VirtualMachineImage) {
 			if plan.PlanVirtualMachineDetail.VMImages != nil {
 				plan.PlanCoreVMDetail.VMImages[version] = vm
 				return
@@ -70,49 +84,68 @@ var (
 		}),
 	}
 
-	putImageCmd = &cobra.Command{
-		Use:   "image",
-		Short: "put a vm image version for a given plan",
-		Run: getAndPutMutatedPlan(func(plan *partner.Plan, version string, vm partner.VirtualMachineImage) {
-			if plan.PlanVirtualMachineDetail.VMImages != nil {
-				plan.PlanVirtualMachineDetail.VMImages[version] = vm
-				return
-			}
+	cmd.Flags().StringVar(&oArgs.Image.MediaName, "media-name", "", "(optional) Name of the vm image (only used for CoreVM Type)")
+	cmd.Flags().StringVar(&oArgs.Image.Label, "label", "", "(optional) Label of the vm image (only used for CoreVM Type)")
+	cmd.Flags().StringVar(&oArgs.Image.Description, "desc", "", "(optional) Description of the vm image (only used for CoreVM Type)")
+	oArgs.Image.ShowInGui = to.BoolPtr(false)
+	cmd.Flags().BoolVar(oArgs.Image.ShowInGui, "show", false, "(optional) Show in GUI (only used for CoreVM Type)")
+	cmd, err := bindPutArgs(cmd, &oArgs)
+	return cmd, err
+}
 
-			plan.PlanVirtualMachineDetail.VMImages = map[string]partner.VirtualMachineImage{version: vm}
-		}),
+func bindPutArgs(cmd *cobra.Command, oArgs *putImageVersionsArgs) (*cobra.Command, error) {
+	if err := args.BindPublisher(cmd, &oArgs.Publisher); err != nil {
+		return cmd, err
 	}
-)
 
-func getAndPutMutatedPlan(mutator func(plan *partner.Plan, version string, vm partner.VirtualMachineImage)) func(cmd *cobra.Command, args []string) {
+	if err := args.BindOffer(cmd, &oArgs.Offer); err != nil {
+		return cmd, err
+	}
+
+	cmd.Flags().StringVarP(&oArgs.SKU, "sku", "s", "", "String that uniquely identifies the SKU (SKU ID).")
+	if err := cmd.MarkFlagRequired("sku"); err != nil {
+		return cmd, err
+	}
+
+	cmd.Flags().StringVar(&oArgs.Version, "version", "", "String that uniquely identifies the version.")
+	if err := cmd.MarkFlagRequired("version"); err != nil {
+		return cmd, err
+	}
+
+	cmd.Flags().StringVar(&oArgs.Image.OSVHDURL, "vhd-uri", "", "Signed Azure classic storage blob containing a captured VHD")
+	err := cmd.MarkFlagRequired("vhd-uri")
+	return cmd, err
+}
+
+func getAndPutMutatedPlan(clientFactory func() (GetterPutter, error), oArgs *putImageVersionsArgs, mutator func(plan *partner.Plan, version string, vm partner.VirtualMachineImage)) func(cmd *cobra.Command, args []string) {
 	return xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-		client, err := getClient()
+		client, err := clientFactory()
 		if err != nil {
 			log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 		}
 
 		offer, err := client.GetOffer(ctx, partner.ShowOfferParams{
-			PublisherID: putImageVersionsArgs.PublisherID,
-			OfferID:     putImageVersionsArgs.Offer,
+			PublisherID: oArgs.Publisher,
+			OfferID:     oArgs.Offer,
 		})
 
 		if err != nil {
 			xcobra.PrintfErrAndExit(1, "unable to list offers: %v", err)
 		}
 
-		plan := offer.GetPlanByID(putImageVersionsArgs.SKU)
+		plan := offer.GetPlanByID(oArgs.SKU)
 
 		if plan == nil {
 			xcobra.PrintfErrAndExit(1, "no plan was found")
 		}
 
-		mutator(plan, putImageVersionsArgs.Version, putImageVersionsArgs.Image)
+		mutator(plan, oArgs.Version, oArgs.Image)
 
 		offer, err = client.PutOffer(ctx, offer)
 		if err != nil {
 			xcobra.PrintfErrAndExit(1, "unable to list offers: %v", err)
 		}
 
-		printVersions(offer.GetPlanByID(putImageVersionsArgs.SKU).GetVMImages())
+		printVersions(offer.GetPlanByID(oArgs.SKU).GetVMImages())
 	})
 }

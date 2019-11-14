@@ -8,43 +8,39 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
 )
 
-func init() {
-	listCmd.Flags().StringVarP(&listVersionsArgs.Publisher, "publisher", "p", "", "publisher ID for your Cloud Partner Provider")
-	_ = listCmd.MarkFlagRequired("publisher")
-	listCmd.Flags().StringVarP(&listVersionsArgs.Offer, "offer", "o", "", "String that uniquely identifies the offer (Offer ID).")
-	_ = listCmd.MarkFlagRequired("offer")
-	listCmd.Flags().StringVarP(&listVersionsArgs.SKU, "sku", "s", "", "String that uniquely identifies the SKU (SKU ID).")
-	_ = listCmd.MarkFlagRequired("sku")
-	rootCmd.AddCommand(listCmd)
-}
-
 type (
-	// ListVersionsArgs are the arguments for `versions list` command
-	ListVersionsArgs struct {
+	// listVersionsArgs are the arguments for `versions list` command
+	listVersionsArgs struct {
 		Publisher string
 		Offer     string
 		SKU       string
 	}
+
+	// Getter provides the ability to get an offer
+	Getter interface {
+		GetOffer(ctx context.Context, params partner.ShowOfferParams) (*partner.Offer, error)
+	}
 )
 
-var (
-	listVersionsArgs ListVersionsArgs
-	listCmd          = &cobra.Command{
+func newListCommand(clientFactory func() (Getter, error)) (*cobra.Command, error) {
+	var oArgs listVersionsArgs
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "list all versions for a given plan",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := getClient()
+			client, err := clientFactory()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
 
 			offer, err := client.GetOffer(ctx, partner.ShowOfferParams{
-				PublisherID: listVersionsArgs.Publisher,
-				OfferID:     listVersionsArgs.Offer,
+				PublisherID: oArgs.Publisher,
+				OfferID:     oArgs.Offer,
 			})
 
 			if err != nil {
@@ -53,7 +49,7 @@ var (
 
 			var versions map[string]partner.VirtualMachineImage
 			for _, plan := range offer.Definition.Plans {
-				if plan.ID == listVersionsArgs.SKU {
+				if plan.ID == oArgs.SKU {
 					versions = plan.GetVMImages()
 					break
 				}
@@ -62,7 +58,19 @@ var (
 			printVersions(versions)
 		}),
 	}
-)
+
+	if err := args.BindPublisher(cmd, &oArgs.Publisher); err != nil {
+		return cmd, err
+	}
+
+	if err := args.BindOffer(cmd, &oArgs.Offer); err != nil {
+		return cmd, err
+	}
+
+	cmd.Flags().StringVarP(&oArgs.SKU, "sku", "s", "", "String that uniquely identifies the SKU (SKU ID).")
+	err := cmd.MarkFlagRequired("sku")
+	return cmd, err
+}
 
 func printVersions(versions map[string]partner.VirtualMachineImage) {
 	bits, err := json.Marshal(versions)

@@ -12,30 +12,21 @@ import (
 	"github.com/devigned/pub/pkg/xcobra"
 )
 
-func init() {
-	rootCmd.AddCommand(listCmd)
-}
-
 type (
-	// ListPublisherArgs are the arguments for `publishers list` command
-	ListPublisherArgs struct {
-		APIVersion string
+	// Lister provides the ability to list publishers
+	Lister interface {
+		ListPublishers(ctx context.Context) ([]partner.Publisher, error)
 	}
 )
 
-var (
-	listPublisherArgs ListPublisherArgs
-	listCmd           = &cobra.Command{
+func newListCommand(clientFactory func() (Lister, error)) (*cobra.Command, error) {
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "list all publishers",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := getClient()
+			client, err := clientFactory()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
-			}
-
-			if listPublisherArgs.APIVersion == "" {
-				listPublisherArgs.APIVersion = *defaultAPIVersion
 			}
 
 			publishers, err := client.ListPublishers(ctx)
@@ -47,7 +38,8 @@ var (
 			printPublishers(publishers)
 		}),
 	}
-)
+	return cmd, nil
+}
 
 func printPublishers(publishers []partner.Publisher) {
 	bits, err := json.Marshal(publishers)

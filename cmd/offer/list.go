@@ -8,37 +8,36 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
 )
 
-func init() {
-	listCmd.Flags().StringVarP(&listOfferArgs.Publisher, "publisher", "p", "", "publisher ID for your Cloud Partner Provider")
-	_ = listCmd.MarkFlagRequired("publisher")
-	rootCmd.AddCommand(listCmd)
-}
-
 type (
-	// ListOfferArgs are the arguments for `offers list` command
-	ListOfferArgs struct {
+	listOfferArgs struct {
 		Publisher  string
 		APIVersion string
 	}
+
+	// Lister provides the ability to list offers
+	Lister interface {
+		ListOffers(ctx context.Context, params partner.ListOffersParams) ([]partner.Offer, error)
+	}
 )
 
-var (
-	listOfferArgs ListOfferArgs
-	listCmd       = &cobra.Command{
+func newListCommand(clientFactory func() (Lister, error)) (*cobra.Command, error) {
+	var oArgs listOfferArgs
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "list all offers",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := getClient()
+			client, err := clientFactory()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
 
 			offers, err := client.ListOffers(ctx, partner.ListOffersParams{
-				PublisherID: listOfferArgs.Publisher,
+				PublisherID: oArgs.Publisher,
 			})
 
 			if err != nil {
@@ -48,7 +47,10 @@ var (
 			printOffers(offers)
 		}),
 	}
-)
+
+	err := args.BindPublisher(cmd, &oArgs.Publisher)
+	return cmd, err
+}
 
 func printOffers(offers []partner.Offer) {
 	bits, err := json.Marshal(offers)

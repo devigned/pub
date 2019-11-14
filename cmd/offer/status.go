@@ -8,35 +8,32 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
 )
 
-func init() {
-	statusCmd.Flags().StringVarP(&showOfferArgs.Publisher, "publisher", "p", "", "Publisher ID; For example, Contoso.")
-	_ = statusCmd.MarkFlagRequired("publisher")
-	statusCmd.Flags().StringVarP(&showOfferArgs.Offer, "offer", "o", "", "String that uniquely identifies the offer.")
-	_ = statusCmd.MarkFlagRequired("offer")
-	rootCmd.AddCommand(statusCmd)
-}
+type (
+	// Stater will fetch an offer's status
+	Stater interface {
+		GetOfferStatus(ctx context.Context, params partner.ShowOfferParams) (*partner.OfferStatus, error)
+	}
+)
 
-var (
-	statusCmd = &cobra.Command{
+func newStatusCommand(clientFactory func() (Stater, error)) (*cobra.Command, error) {
+	var oArgs showOfferArgs
+	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "show status for an offer",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := getClient()
+			client, err := clientFactory()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
 
-			if showOfferArgs.APIVersion == "" {
-				showOfferArgs.APIVersion = *defaultAPIVersion
-			}
-
 			status, err := client.GetOfferStatus(ctx, partner.ShowOfferParams{
-				PublisherID: showOfferArgs.Publisher,
-				OfferID:     showOfferArgs.Offer,
+				PublisherID: oArgs.Publisher,
+				OfferID:     oArgs.Offer,
 			})
 			if err != nil {
 				log.Printf("error: %v", err)
@@ -46,7 +43,14 @@ var (
 			printOfferStatus(status)
 		}),
 	}
-)
+
+	if err := args.BindPublisher(cmd, &oArgs.Publisher); err != nil {
+		return cmd, err
+	}
+
+	err := args.BindOffer(cmd, &oArgs.Offer)
+	return cmd, err
+}
 
 func printOfferStatus(status *partner.OfferStatus) {
 	bits, err := json.Marshal(status)
