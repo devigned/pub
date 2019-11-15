@@ -4,54 +4,44 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"strings"
 
 	"github.com/Jeffail/gabs"
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/pkg/service"
+
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
 )
 
-func init() {
-	putCmd.Flags().StringVarP(&putOfferArgs.OfferFilePath, "offer-file", "o", "", "File path to the JSON file containing the offer")
-	_ = putCmd.MarkFlagRequired("offer-file")
-	putCmd.Flags().StringArrayVar(&putOfferArgs.Set, "set", []string{}, "set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
-	rootCmd.AddCommand(putCmd)
-}
-
 type (
-	// PutOfferArgs are the arguments for `pub offers put`
-	PutOfferArgs struct {
+	putOfferArgs struct {
 		OfferFilePath string
 		Set           []string
 	}
 )
 
-var (
-	putOfferArgs PutOfferArgs
-	putCmd       = &cobra.Command{
+func newPutCommand(sl service.CommandServicer) (*cobra.Command, error) {
+	var oArgs putOfferArgs
+	cmd := &cobra.Command{
 		Use:   "put",
 		Short: "create or update an offer",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := getClient()
+			bits, err := ioutil.ReadFile(oArgs.OfferFilePath)
 			if err != nil {
 				xcobra.PrintfErrAndExit(1, "%v\n", err)
 			}
 
-			bits, err := ioutil.ReadFile(putOfferArgs.OfferFilePath)
-			if err != nil {
-				xcobra.PrintfErrAndExit(1, "%v\n", err)
-			}
-
-			if len(putOfferArgs.Set) > 0 {
+			if len(oArgs.Set) > 0 {
 				parsedJSON, err := gabs.ParseJSON(bits)
 				if err != nil {
 					xcobra.PrintfErrAndExit(1, "%v\n", err)
 				}
 
 				setJSON := gabs.New()
-				for _, item := range putOfferArgs.Set {
+				for _, item := range oArgs.Set {
 					splits := strings.Split(item, "=")
 					if len(splits) != 2 {
 						xcobra.PrintfErrAndExit(1, "the set item %s was not in key.keypart=value format", item)
@@ -75,12 +65,26 @@ var (
 				xcobra.PrintfErrAndExit(1, "unable unmarshal JSON offer into partner.Offer")
 			}
 
+			client, err := sl.GetCloudPartnerService()
+			if err != nil {
+				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
+			}
+
 			updatedOffer, err := client.PutOffer(ctx, &offer)
 			if err != nil {
 				xcobra.PrintfErrAndExit(1, "%v\n", err)
 			}
 
-			printOffer(updatedOffer)
+			if err := sl.GetPrinter().Print(updatedOffer); err != nil {
+				log.Fatalf("unable to print offer: %v", err)
+			}
 		}),
 	}
-)
+
+	cmd.Flags().StringVarP(&oArgs.OfferFilePath, "offer-file", "o", "", "File path to the JSON file containing the offer")
+	if err := cmd.MarkFlagRequired("offer-file"); err != nil {
+		return cmd, err
+	}
+	cmd.Flags().StringArrayVar(&oArgs.Set, "set", []string{}, "set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
+	return cmd, nil
+}

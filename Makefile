@@ -13,7 +13,7 @@ V = 0
 Q = $(if $(filter 1,$V),,@)
 
 .PHONY: all
-all: install-tools fmt lint vet tidy build
+all: install-tools fmt lint vet tidy build test
 
 install-tools: ; $(info $(M) installing tools…)
 	$(Q) make -C ./tools
@@ -43,6 +43,18 @@ tidy: ; $(info $(M) running tidy…) @ ## Run tidy
 build-debug: ; $(info $(M) buiding debug...)
 	$Q $(GO)  build -o ./bin/$(APP) -tags debug
 
+.PHONY: test
+test: ; $(info $(M) running go test…)
+	$(Q) $(GO) test ./...
+
+.PHONY: test-cover
+test-cover: ; $(info $(M) running go test…)
+	$(Q) $(GO) test -race -covermode atomic -coverprofile=profile.cov ./...
+	$(Q) $(GOBIN)/goveralls -coverprofile=profile.cov -service=github
+
 .PHONY: gox
 gox:
 	gox -osarch="darwin/amd64 windows/amd64 linux/amd64" -ldflags "-X $(PACKAGE)/cmd.GitCommit=$(VERSION)" -output "./bin/$(SHORT_VERSION)/{{.Dir}}_{{.OS}}_{{.Arch}}"
+
+.PHONY: ci
+ci: install-tools fmt lint vet tidy build test-cover

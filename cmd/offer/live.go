@@ -2,54 +2,60 @@ package offer
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/pkg/service"
+
+	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
 )
 
-func init() {
-	liveCmd.Flags().StringVarP(&goLiveOfferArgs.Publisher, "publisher", "p", "", "Publisher ID; For example, Contoso.")
-	_ = liveCmd.MarkFlagRequired("publisher")
-	liveCmd.Flags().StringVarP(&goLiveOfferArgs.Offer, "offer", "o", "", "String that uniquely identifies the offer.")
-	_ = liveCmd.MarkFlagRequired("offer")
-	liveCmd.Flags().StringVarP(&goLiveOfferArgs.NotificationEmails, "notification-emails", "e", "", "Comma separated list of emails to notify when publication completes.")
-	rootCmd.AddCommand(liveCmd)
-}
-
 type (
-	// GoLiveOfferArgs are the arguments for `offers live` command
-	GoLiveOfferArgs struct {
+	goLiveOfferArgs struct {
 		Publisher          string
 		Offer              string
 		NotificationEmails string
 	}
 )
 
-var (
-	goLiveOfferArgs GoLiveOfferArgs
-	liveCmd         = &cobra.Command{
+func newGoLiveCommand(sl service.CommandServicer) (*cobra.Command, error) {
+	var oArgs goLiveOfferArgs
+	cmd := &cobra.Command{
 		Use:   "live",
 		Short: "go live with an offer (make available to the world)",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := getClient()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
-				xcobra.PrintfErrAndExit(1, "%v\n", err)
+				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
 
 			opLocation, err := client.GoLiveWithOffer(ctx, partner.GoLiveParams{
-				NotificationEmails: goLiveOfferArgs.NotificationEmails,
-				OfferID:            goLiveOfferArgs.Offer,
-				PublisherID:        goLiveOfferArgs.Publisher,
+				NotificationEmails: oArgs.NotificationEmails,
+				OfferID:            oArgs.Offer,
+				PublisherID:        oArgs.Publisher,
 			})
 
 			if err != nil {
 				xcobra.PrintfErrAndExit(1, "%v\n", err)
 			}
 
-			fmt.Println(opLocation)
+			if err := sl.GetPrinter().Print(opLocation); err != nil {
+				log.Fatalf("unable to print location: %v", err)
+			}
 		}),
 	}
-)
+
+	if err := args.BindPublisher(cmd, &oArgs.Publisher); err != nil {
+		return cmd, err
+	}
+
+	if err := args.BindOffer(cmd, &oArgs.Offer); err != nil {
+		return cmd, err
+	}
+
+	cmd.Flags().StringVarP(&oArgs.NotificationEmails, "notification-emails", "e", "", "Comma separated list of emails to notify when publication completes.")
+	return cmd, nil
+}

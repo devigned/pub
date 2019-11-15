@@ -3,24 +3,22 @@ package sku
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/devigned/pub/pkg/partner"
+	"github.com/devigned/pub/pkg/service"
 )
 
-var (
-	defaultAPIVersion *string
-	rootCmd           = &cobra.Command{
+// NewRootCmd returns the root offers cmd
+func NewRootCmd(sl service.CommandServicer) (*cobra.Command, error) {
+	rootCmd := &cobra.Command{
 		Use:              "skus",
 		Short:            "a group of actions for working with SKUs",
 		TraverseChildren: true,
 	}
-)
 
-// RootCmd returns the root offers cmd
-func RootCmd(apiVersion *string) *cobra.Command {
-	defaultAPIVersion = apiVersion
-	return rootCmd
-}
+	list, err := newListCommand(sl)
+	if err != nil {
+		return rootCmd, err
+	}
 
-func getClient(opts ...partner.ClientOption) (*partner.Client, error) {
-	return partner.New(*defaultAPIVersion, opts...)
+	rootCmd.AddCommand(list)
+	return rootCmd, err
 }

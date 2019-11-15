@@ -8,50 +8,56 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/pkg/service"
+
+	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
 )
 
-func init() {
-	listCmd.Flags().StringVarP(&listPlansArgs.Publisher, "publisher", "p", "", "publisher ID for your Cloud Partner Provider")
-	_ = listCmd.MarkFlagRequired("publisher")
-	listCmd.Flags().StringVarP(&listPlansArgs.Offer, "offer", "o", "", "String that uniquely identifies the offer.")
-	_ = listCmd.MarkFlagRequired("offer")
-	rootCmd.AddCommand(listCmd)
-}
-
 type (
-	// ListPlansArgs are the arguments for `plans list` command
-	ListPlansArgs struct {
+	listPlansArgs struct {
 		Publisher string
 		Offer     string
 	}
 )
 
-var (
-	listPlansArgs ListPlansArgs
-	listCmd       = &cobra.Command{
+func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
+	var oArgs listPlansArgs
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "list all SKUs for a given offer and publisher",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := getClient()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
 
 			offer, err := client.GetOffer(ctx, partner.ShowOfferParams{
-				PublisherID: listPlansArgs.Publisher,
-				OfferID:     listPlansArgs.Offer,
+				PublisherID: oArgs.Publisher,
+				OfferID:     oArgs.Offer,
 			})
 
 			if err != nil {
 				log.Fatalf("unable to fetch the offer: %v", err)
 			}
 
-			printPlans(offer.Definition.Plans)
+			if err := sl.GetPrinter().Print(offer.Definition.Plans); err != nil {
+				log.Fatalf("unable to print offer plans: %v", err)
+			}
 		}),
 	}
-)
+
+	if err := args.BindPublisher(cmd, &oArgs.Publisher); err != nil {
+		return cmd, err
+	}
+
+	if err := args.BindOffer(cmd, &oArgs.Offer); err != nil {
+		return cmd, err
+	}
+
+	return cmd, nil
+}
 
 func printPlans(plans []partner.Plan) {
 	bits, err := json.Marshal(plans)

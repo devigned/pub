@@ -29,6 +29,7 @@ const (
 type (
 	// Client is the HTTP client for the Cloud Partner Portal
 	Client struct {
+		HTTPClient *http.Client
 		Authorizer autorest.Authorizer
 		APIVersion string
 		Host       string
@@ -562,9 +563,7 @@ func (c *Client) execute(ctx context.Context, method string, entityPath string, 
 
 	final := func(_ RestHandler) RestHandler {
 		return func(reqCtx context.Context, request *http.Request) (*http.Response, error) {
-			client := &http.Client{
-				Timeout: 60 * time.Second,
-			}
+			client := c.getHTTPClient()
 			request = request.WithContext(reqCtx)
 			request.Header.Set("Content-Type", "application/json")
 			request, err := autorest.CreatePreparer(c.Authorizer.WithAuthorization()).Prepare(request)
@@ -598,6 +597,16 @@ func (c *Client) execute(ctx context.Context, method string, entityPath string, 
 	}
 
 	return h(ctx, req)
+}
+
+func (c *Client) getHTTPClient() *http.Client {
+	if c.HTTPClient != nil {
+		return c.HTTPClient
+	}
+
+	return &http.Client{
+		Timeout: 60 * time.Second,
+	}
 }
 
 func closeResponse(ctx context.Context, res *http.Response) {

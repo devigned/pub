@@ -8,23 +8,15 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/pkg/service"
+
+	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
 )
 
-func init() {
-	showCmd.Flags().StringVarP(&showOfferArgs.Publisher, "publisher", "p", "", "Publisher ID; For example, Contoso.")
-	_ = showCmd.MarkFlagRequired("publisher")
-	showCmd.Flags().StringVarP(&showOfferArgs.Offer, "offer", "o", "", "String that uniquely identifies the offer.")
-	_ = showCmd.MarkFlagRequired("offer")
-	showCmd.Flags().IntVar(&showOfferArgs.Version, "version", -1, "Version of the offer being retrieved. By default, the latest offer version is retrieved")
-	showCmd.Flags().StringVar(&showOfferArgs.Slot, "slot", "", "The slot from which the offer is to be retrieved, can be one of: Draft (default) retrieves the offer version currently in draft. Preview retrieves the offer version currently in preview. Production retrieves the offer version currently in production.")
-	rootCmd.AddCommand(showCmd)
-}
-
 type (
-	// ShowOfferArgs are the arguments for `offers show` command
-	ShowOfferArgs struct {
+	showOfferArgs struct {
 		Publisher  string
 		Offer      string
 		Version    int
@@ -33,38 +25,34 @@ type (
 	}
 )
 
-var (
-	showOfferArgs ShowOfferArgs
-	showCmd       = &cobra.Command{
+func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
+	var oArgs showOfferArgs
+	cmd := &cobra.Command{
 		Use:   "show",
 		Short: "show an offer",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := getClient()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
 
-			if showOfferArgs.APIVersion == "" {
-				showOfferArgs.APIVersion = *defaultAPIVersion
-			}
-
 			var offer *partner.Offer
 			switch {
-			case showOfferArgs.Slot != "":
+			case oArgs.Slot != "":
 				o, err := client.GetOfferBySlot(ctx, partner.ShowOfferBySlotParams{
-					PublisherID: showOfferArgs.Publisher,
-					OfferID:     showOfferArgs.Offer,
-					SlotID:      showOfferArgs.Slot,
+					PublisherID: oArgs.Publisher,
+					OfferID:     oArgs.Offer,
+					SlotID:      oArgs.Slot,
 				})
 				if err != nil {
 					log.Printf("error: %v", err)
 				}
 				offer = o
-			case showOfferArgs.Version != -1:
+			case oArgs.Version != -1:
 				o, err := client.GetOfferByVersion(ctx, partner.ShowOfferByVersionParams{
-					PublisherID: showOfferArgs.Publisher,
-					OfferID:     showOfferArgs.Offer,
-					Version:     showOfferArgs.Version,
+					PublisherID: oArgs.Publisher,
+					OfferID:     oArgs.Offer,
+					Version:     oArgs.Version,
 				})
 				if err != nil {
 					log.Printf("error: %v", err)
@@ -73,8 +61,8 @@ var (
 				offer = o
 			default:
 				o, err := client.GetOffer(ctx, partner.ShowOfferParams{
-					PublisherID: showOfferArgs.Publisher,
-					OfferID:     showOfferArgs.Offer,
+					PublisherID: oArgs.Publisher,
+					OfferID:     oArgs.Offer,
 				})
 				if err != nil {
 					log.Printf("error: %v", err)
@@ -82,10 +70,27 @@ var (
 				}
 				offer = o
 			}
-			printOffer(offer)
+
+			if err := sl.GetPrinter().Print(offer); err != nil {
+				log.Fatalf("unable to print offer: %v", err)
+			}
 		}),
 	}
-)
+
+	if err := args.BindPublisher(cmd, &oArgs.Publisher); err != nil {
+		return cmd, err
+	}
+
+	if err := args.BindOffer(cmd, &oArgs.Offer); err != nil {
+		return cmd, err
+	}
+
+	cmd.Flags().IntVar(&oArgs.Version, "version", -1, "Version of the offer being retrieved. By default, the latest offer version is retrieved")
+	cmd.Flags().StringVar(&oArgs.Slot, "slot", "", "The slot from which the offer is to be retrieved, can be one of: Draft (default) retrieves the offer version currently in draft. Preview retrieves the offer version currently in preview. Production retrieves the offer version currently in production.")
+	return cmd, nil
+}
+
+var ()
 
 func printOffer(offer *partner.Offer) {
 	bits, err := json.Marshal(offer)

@@ -8,46 +8,36 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/pkg/service"
+
+	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
 )
 
-func init() {
-	showCmd.Flags().StringVarP(&showVersionsArgs.PublisherID, "publisher", "p", "", "publisher ID for your Cloud Partner Provider")
-	_ = showCmd.MarkFlagRequired("publisher")
-	showCmd.Flags().StringVarP(&showVersionsArgs.Offer, "offer", "o", "", "String that uniquely identifies the offer.")
-	_ = showCmd.MarkFlagRequired("offer")
-	showCmd.Flags().StringVarP(&showVersionsArgs.SKU, "sku", "s", "", "String that uniquely identifies the SKU (SKU ID).")
-	_ = showCmd.MarkFlagRequired("sku")
-	showCmd.Flags().StringVar(&showVersionsArgs.Version, "version", "", "String that uniquely identifies the version.")
-	_ = showCmd.MarkFlagRequired("version")
-	rootCmd.AddCommand(showCmd)
-}
-
 type (
-	// ShowVersionsArgs are the arguments for `versions show` command
-	ShowVersionsArgs struct {
-		PublisherID string
-		Offer       string
-		SKU         string
-		Version     string
+	showVersionsArgs struct {
+		Publisher string
+		Offer     string
+		SKU       string
+		Version   string
 	}
 )
 
-var (
-	showVersionsArgs ShowVersionsArgs
-	showCmd          = &cobra.Command{
+func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
+	var oArgs showVersionsArgs
+	cmd := &cobra.Command{
 		Use:   "show",
 		Short: "show a version for a given plan",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := getClient()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
 
 			offer, err := client.GetOffer(ctx, partner.ShowOfferParams{
-				PublisherID: showVersionsArgs.PublisherID,
-				OfferID:     showVersionsArgs.Offer,
+				PublisherID: oArgs.Publisher,
+				OfferID:     oArgs.Offer,
 			})
 
 			if err != nil {
@@ -56,21 +46,42 @@ var (
 
 			var versions map[string]partner.VirtualMachineImage
 			for _, plan := range offer.Definition.Plans {
-				if plan.ID == showVersionsArgs.SKU {
+				if plan.ID == oArgs.SKU {
 					versions = plan.GetVMImages()
 					break
 				}
 			}
 
-			if version, ok := versions[showVersionsArgs.Version]; ok {
-				printVersion(version)
+			if version, ok := versions[oArgs.Version]; ok {
+				if err := sl.GetPrinter().Print(version); err != nil {
+					log.Fatalf("unable to print version: %v", err)
+				}
 				return
 			}
 
-			fmt.Println("no version found")
+			if err := sl.GetPrinter().Print("no version found"); err != nil {
+				log.Fatalf("unable to print: %v", err)
+			}
 		}),
 	}
-)
+
+	if err := args.BindPublisher(cmd, &oArgs.Publisher); err != nil {
+		return cmd, err
+	}
+
+	if err := args.BindOffer(cmd, &oArgs.Offer); err != nil {
+		return cmd, err
+	}
+
+	cmd.Flags().StringVarP(&oArgs.SKU, "sku", "s", "", "String that uniquely identifies the SKU (SKU ID).")
+	if err := cmd.MarkFlagRequired("sku"); err != nil {
+		return cmd, err
+	}
+
+	cmd.Flags().StringVar(&oArgs.Version, "version", "", "String that uniquely identifies the version.")
+	err := cmd.MarkFlagRequired("version")
+	return cmd, err
+}
 
 func printVersion(version partner.VirtualMachineImage) {
 	bits, err := json.Marshal(version)

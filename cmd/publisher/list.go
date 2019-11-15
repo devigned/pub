@@ -8,34 +8,20 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/pkg/service"
+
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
 )
 
-func init() {
-	rootCmd.AddCommand(listCmd)
-}
-
-type (
-	// ListPublisherArgs are the arguments for `publishers list` command
-	ListPublisherArgs struct {
-		APIVersion string
-	}
-)
-
-var (
-	listPublisherArgs ListPublisherArgs
-	listCmd           = &cobra.Command{
+func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "list all publishers",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := getClient()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
-			}
-
-			if listPublisherArgs.APIVersion == "" {
-				listPublisherArgs.APIVersion = *defaultAPIVersion
 			}
 
 			publishers, err := client.ListPublishers(ctx)
@@ -44,10 +30,13 @@ var (
 				log.Fatalf("unable to list offers: %v", err)
 			}
 
-			printPublishers(publishers)
+			if err := sl.GetPrinter().Print(publishers); err != nil {
+				log.Fatalf("unable to print publishers: %v", err)
+			}
 		}),
 	}
-)
+	return cmd, nil
+}
 
 func printPublishers(publishers []partner.Publisher) {
 	bits, err := json.Marshal(publishers)

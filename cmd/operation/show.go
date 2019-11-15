@@ -2,64 +2,61 @@ package operation
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
+	"log"
 
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/pkg/service"
+
+	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
 )
 
-func init() {
-	showCmd.Flags().StringVarP(&showOperationsArgs.Publisher, "publisher", "p", "", "Publisher ID; For example, Contoso.")
-	_ = showCmd.MarkFlagRequired("publisher")
-	showCmd.Flags().StringVarP(&showOperationsArgs.Offer, "offer", "o", "", "String that uniquely identifies the offer.")
-	_ = showCmd.MarkFlagRequired("offer")
-	showCmd.Flags().StringVar(&showOperationsArgs.Operation, "op", "", "Operation Id (guid).")
-	_ = showCmd.MarkFlagRequired("operation")
-	rootCmd.AddCommand(showCmd)
-}
-
 type (
-	// ShowOperationsArgs are the arguments for `operations show` command
-	ShowOperationsArgs struct {
+	showOperationsArgs struct {
 		Publisher string
 		Offer     string
 		Operation string
 	}
 )
 
-var (
-	showOperationsArgs ShowOperationsArgs
-	showCmd            = &cobra.Command{
+func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
+	var oArgs showOperationsArgs
+	cmd := &cobra.Command{
 		Use:   "show",
 		Short: "show an operation by Id",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := getClient()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
-				xcobra.PrintfErrAndExit(1, "unable to create Cloud Partner Portal client: %v", err)
+				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
 
 			op, err := client.GetOperation(ctx, partner.GetOperationParams{
-				PublisherID: showOperationsArgs.Publisher,
-				OfferID:     showOperationsArgs.Offer,
-				OperationID: showOperationsArgs.Operation,
+				PublisherID: oArgs.Publisher,
+				OfferID:     oArgs.Offer,
+				OperationID: oArgs.Operation,
 			})
 
 			if err != nil {
 				xcobra.PrintfErrAndExit(1, "unable to fetch operations: %v", err)
 			}
 
-			printOp(op)
+			if err := sl.GetPrinter().Print(op); err != nil {
+				log.Fatalf("unable to print operation: %v", err)
+			}
 		}),
 	}
-)
 
-func printOp(op *partner.OperationDetail) {
-	bits, err := json.Marshal(op)
-	if err != nil {
-		xcobra.PrintfErrAndExit(1, "failed to print the operation: %v", err)
+	if err := args.BindPublisher(cmd, &oArgs.Publisher); err != nil {
+		return cmd, err
 	}
-	fmt.Print(string(bits))
+
+	if err := args.BindOffer(cmd, &oArgs.Offer); err != nil {
+		return cmd, err
+	}
+
+	cmd.Flags().StringVar(&oArgs.Operation, "op", "", "Operation Id (guid).")
+	err := cmd.MarkFlagRequired("op")
+	return cmd, err
 }
