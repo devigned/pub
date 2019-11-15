@@ -13,7 +13,7 @@ V = 0
 Q = $(if $(filter 1,$V),,@)
 
 .PHONY: all
-all: install-tools fmt lint vet tidy build
+all: install-tools fmt lint vet tidy build test
 
 install-tools: ; $(info $(M) installing tools…)
 	$(Q) make -C ./tools
@@ -42,6 +42,10 @@ tidy: ; $(info $(M) running tidy…) @ ## Run tidy
 .PHONY: build-debug
 build-debug: ; $(info $(M) buiding debug...)
 	$Q $(GO)  build -o ./bin/$(APP) -tags debug
+
+.PHONY: test
+test: ; $(info $(M) running go test…)
+	$(Q) $(GO) test ./...
 
 .PHONY: gox
 gox:
