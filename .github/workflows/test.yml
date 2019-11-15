@@ -15,4 +15,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v1
       - name: Make
-        run: make
+        env:
+          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: make ci

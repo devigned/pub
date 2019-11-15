@@ -47,6 +47,14 @@ build-debug: ; $(info $(M) buiding debug...)
 test: ; $(info $(M) running go test…)
 	$(Q) $(GO) test ./...
 
+.PHONY: test-cover
+test-cover: ; $(info $(M) running go test…)
+	$(Q) $(GO) test -race -covermode atomic -coverprofile=profile.cov ./...
+	$(Q) $(GOBIN)/goveralls -coverprofile=profile.cov -service=github
+
 .PHONY: gox
 gox:
 	gox -osarch="darwin/amd64 windows/amd64 linux/amd64" -ldflags "-X $(PACKAGE)/cmd.GitCommit=$(VERSION)" -output "./bin/$(SHORT_VERSION)/{{.Dir}}_{{.OS}}_{{.Arch}}"
+
+.PHONY: ci
+ci: install-tools fmt lint vet tidy build test-cover
