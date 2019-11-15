@@ -8,6 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/pkg/service"
+
 	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
@@ -22,13 +24,13 @@ type (
 	}
 )
 
-func newShowCommand(clientFactory func() (Getter, error)) (*cobra.Command, error) {
+func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	var oArgs showVersionsArgs
 	cmd := &cobra.Command{
 		Use:   "show",
 		Short: "show a version for a given plan",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := clientFactory()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
@@ -51,11 +53,15 @@ func newShowCommand(clientFactory func() (Getter, error)) (*cobra.Command, error
 			}
 
 			if version, ok := versions[oArgs.Version]; ok {
-				printVersion(version)
+				if err := sl.GetPrinter().Print(version); err != nil {
+					log.Fatalf("unable to print version: %v", err)
+				}
 				return
 			}
 
-			fmt.Println("no version found")
+			if err := sl.GetPrinter().Print("no version found"); err != nil {
+				log.Fatalf("unable to print: %v", err)
+			}
 		}),
 	}
 

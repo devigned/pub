@@ -2,29 +2,27 @@ package operation
 
 import (
 	"github.com/spf13/cobra"
-)
 
-type (
-	// Operator provides the ability to list, get, cancel and get by address operations
-	Operator interface {
-		Lister
-		Getter
-		Canceller
-		AddressedGetter
-	}
+	"github.com/devigned/pub/pkg/service"
 )
 
 // NewRootCmd returns the root operations cmd
-func NewRootCmd(clientFactory func() (Operator, error)) (*cobra.Command, error) {
+func NewRootCmd(sl service.CommandServicer) (*cobra.Command, error) {
 	rootCmd := &cobra.Command{
 		Use:              "operations",
 		Short:            "a group of actions for working with offer operations",
 		TraverseChildren: true,
 	}
 
-	cmds := getWrappedCmds(clientFactory)
-	for _, f := range cmds {
-		cmd, err := f()
+	cmdFuncs := []func(locator service.CommandServicer) (*cobra.Command, error){
+		newListCommand,
+		newShowCommand,
+		newCancelCommand,
+		newGetCommand,
+	}
+
+	for _, f := range cmdFuncs {
+		cmd, err := f(sl)
 		if err != nil {
 			return rootCmd, err
 		}
@@ -32,33 +30,4 @@ func NewRootCmd(clientFactory func() (Operator, error)) (*cobra.Command, error) 
 	}
 
 	return rootCmd, nil
-}
-
-func getWrappedCmds(clientFactory func() (Operator, error)) []func() (*cobra.Command, error) {
-	return []func() (*cobra.Command, error){
-		func() (*cobra.Command, error) {
-			factory := func() (Lister, error) {
-				return clientFactory()
-			}
-			return newListCommand(factory)
-		},
-		func() (*cobra.Command, error) {
-			factory := func() (Getter, error) {
-				return clientFactory()
-			}
-			return newShowCommand(factory)
-		},
-		func() (*cobra.Command, error) {
-			factory := func() (Canceller, error) {
-				return clientFactory()
-			}
-			return newCancelCommand(factory)
-		},
-		func() (*cobra.Command, error) {
-			factory := func() (AddressedGetter, error) {
-				return clientFactory()
-			}
-			return newGetCommand(factory)
-		},
-	}
 }

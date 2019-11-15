@@ -2,10 +2,11 @@ package offer
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
+
+	"github.com/devigned/pub/pkg/service"
 
 	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
@@ -18,20 +19,15 @@ type (
 		Offer              string
 		NotificationEmails string
 	}
-
-	// Publisher provides the ability to publish and offer
-	Publisher interface {
-		PublishOffer(ctx context.Context, params partner.PublishOfferParams) (string, error)
-	}
 )
 
-func newPublishCommand(clientFactory func() (Publisher, error)) (*cobra.Command, error) {
+func newPublishCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	var oArgs publishOfferArgs
 	cmd := &cobra.Command{
 		Use:   "publish",
 		Short: "publish an offer",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := clientFactory()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
@@ -46,7 +42,9 @@ func newPublishCommand(clientFactory func() (Publisher, error)) (*cobra.Command,
 				xcobra.PrintfErrAndExit(1, "%v\n", err)
 			}
 
-			fmt.Println(opLocation)
+			if err := sl.GetPrinter().Print(opLocation); err != nil {
+				log.Fatalf("unable to print location: %v", err)
+			}
 		}),
 	}
 

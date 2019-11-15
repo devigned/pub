@@ -2,10 +2,11 @@ package operation
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
+
+	"github.com/devigned/pub/pkg/service"
 
 	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
@@ -18,20 +19,15 @@ type (
 		Offer              string
 		NotificationEmails string
 	}
-
-	// Canceller provides the ability to cancel an Operation
-	Canceller interface {
-		CancelOperation(ctx context.Context, params partner.CancelOperationParams) (string, error)
-	}
 )
 
-func newCancelCommand(clientFactory func() (Canceller, error)) (*cobra.Command, error) {
+func newCancelCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	var oArgs cancelOperationsArgs
 	cmd := &cobra.Command{
 		Use:   "cancel",
 		Short: "cancel the active operation for a given offer and print the operations",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := clientFactory()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
@@ -46,7 +42,9 @@ func newCancelCommand(clientFactory func() (Canceller, error)) (*cobra.Command, 
 				xcobra.PrintfErrAndExit(1, "unable to cancel the active operation: %v", err)
 			}
 
-			fmt.Print(opLocation)
+			if err := sl.GetPrinter().Print(opLocation); err != nil {
+				log.Fatalf("unable to print location: %v", err)
+			}
 
 		}),
 	}

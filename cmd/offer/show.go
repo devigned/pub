@@ -8,6 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/pkg/service"
+
 	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
@@ -21,22 +23,15 @@ type (
 		Slot       string
 		APIVersion string
 	}
-
-	// Getter will fetch an offer in multiple ways
-	Getter interface {
-		GetOfferBySlot(ctx context.Context, params partner.ShowOfferBySlotParams) (*partner.Offer, error)
-		GetOfferByVersion(ctx context.Context, params partner.ShowOfferByVersionParams) (*partner.Offer, error)
-		GetOffer(ctx context.Context, params partner.ShowOfferParams) (*partner.Offer, error)
-	}
 )
 
-func newShowCommand(clientFactory func() (Getter, error)) (*cobra.Command, error) {
+func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	var oArgs showOfferArgs
 	cmd := &cobra.Command{
 		Use:   "show",
 		Short: "show an offer",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := clientFactory()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
@@ -75,7 +70,10 @@ func newShowCommand(clientFactory func() (Getter, error)) (*cobra.Command, error
 				}
 				offer = o
 			}
-			printOffer(offer)
+
+			if err := sl.GetPrinter().Print(offer); err != nil {
+				log.Fatalf("unable to print offer: %v", err)
+			}
 		}),
 	}
 

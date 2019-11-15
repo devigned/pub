@@ -8,6 +8,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/pkg/format"
+	"github.com/devigned/pub/pkg/service"
+
 	"github.com/devigned/pub/cmd/offer"
 	"github.com/devigned/pub/cmd/operation"
 	"github.com/devigned/pub/cmd/publisher"
@@ -46,9 +49,30 @@ func newRootCommand() (*cobra.Command, error) {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pub.yaml)")
 	rootCmd.PersistentFlags().StringVarP(&apiVersion, "api-version", "v", "2017-10-31", "the API version override")
 
-	cmds := getWrappedCmds(&apiVersion)
-	for _, f := range cmds {
-		cmd, err := f()
+	sl := &service.Registry{
+		CloudPartnerServicerFactory: func() (service.CloudPartnerServicer, error) {
+			return partner.New(apiVersion)
+		},
+		PrinterFactory: func() format.Printer {
+			return &format.StdoutPrinter{
+				Format: format.JSONFormat,
+			}
+		},
+	}
+
+	cmdFuncs := []func(locator service.CommandServicer) (*cobra.Command, error){
+		offer.NewRootCmd,
+		publisher.NewRootCmd,
+		sku.NewRootCmd,
+		version.NewRootCmd,
+		operation.NewRootCmd,
+		func(locator service.CommandServicer) (*cobra.Command, error) {
+			return newVersionCommand(), nil
+		},
+	}
+
+	for _, f := range cmdFuncs {
+		cmd, err := f(sl)
 		if err != nil {
 			return rootCmd, err
 		}
@@ -56,42 +80,4 @@ func newRootCommand() (*cobra.Command, error) {
 	}
 
 	return rootCmd, nil
-}
-
-func getWrappedCmds(apiVersion *string) []func() (*cobra.Command, error) {
-	return []func() (*cobra.Command, error){
-		func() (*cobra.Command, error) {
-			factory := func() (offer.Offerer, error) {
-				return partner.New(*apiVersion)
-			}
-			return offer.NewRootCmd(factory)
-		},
-		func() (*cobra.Command, error) {
-			factory := func() (publisher.Lister, error) {
-				return partner.New(*apiVersion)
-			}
-			return publisher.NewRootCmd(factory)
-		},
-		func() (*cobra.Command, error) {
-			factory := func() (sku.Getter, error) {
-				return partner.New(*apiVersion)
-			}
-			return sku.NewRootCmd(factory)
-		},
-		func() (*cobra.Command, error) {
-			factory := func() (version.GetterPutter, error) {
-				return partner.New(*apiVersion)
-			}
-			return version.NewRootCmd(factory)
-		},
-		func() (*cobra.Command, error) {
-			factory := func() (operation.Operator, error) {
-				return partner.New(*apiVersion)
-			}
-			return operation.NewRootCmd(factory)
-		},
-		func() (*cobra.Command, error) {
-			return newVersionCommand(), nil
-		},
-	}
 }

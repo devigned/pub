@@ -2,11 +2,11 @@ package version
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
+
+	"github.com/devigned/pub/pkg/service"
 
 	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
@@ -20,20 +20,15 @@ type (
 		Offer     string
 		SKU       string
 	}
-
-	// Getter provides the ability to get an offer
-	Getter interface {
-		GetOffer(ctx context.Context, params partner.ShowOfferParams) (*partner.Offer, error)
-	}
 )
 
-func newListCommand(clientFactory func() (Getter, error)) (*cobra.Command, error) {
+func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	var oArgs listVersionsArgs
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "list all versions for a given plan",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := clientFactory()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
@@ -55,7 +50,9 @@ func newListCommand(clientFactory func() (Getter, error)) (*cobra.Command, error
 				}
 			}
 
-			printVersions(versions)
+			if err := sl.GetPrinter().Print(versions); err != nil {
+				log.Fatalf("unable to print versions: %v", err)
+			}
 		}),
 	}
 
@@ -70,12 +67,4 @@ func newListCommand(clientFactory func() (Getter, error)) (*cobra.Command, error
 	cmd.Flags().StringVarP(&oArgs.SKU, "sku", "s", "", "String that uniquely identifies the SKU (SKU ID).")
 	err := cmd.MarkFlagRequired("sku")
 	return cmd, err
-}
-
-func printVersions(versions map[string]partner.VirtualMachineImage) {
-	bits, err := json.Marshal(versions)
-	if err != nil {
-		log.Fatalf("failed to print plans: %v", err)
-	}
-	fmt.Print(string(bits))
 }

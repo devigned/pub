@@ -10,6 +10,8 @@ import (
 	"github.com/Jeffail/gabs"
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/pkg/service"
+
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
 )
@@ -19,14 +21,9 @@ type (
 		OfferFilePath string
 		Set           []string
 	}
-
-	// Putter can update or create an offer
-	Putter interface {
-		PutOffer(ctx context.Context, offer *partner.Offer) (*partner.Offer, error)
-	}
 )
 
-func newPutCommand(clientFactory func() (Putter, error)) (*cobra.Command, error) {
+func newPutCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	var oArgs putOfferArgs
 	cmd := &cobra.Command{
 		Use:   "put",
@@ -68,7 +65,7 @@ func newPutCommand(clientFactory func() (Putter, error)) (*cobra.Command, error)
 				xcobra.PrintfErrAndExit(1, "unable unmarshal JSON offer into partner.Offer")
 			}
 
-			client, err := clientFactory()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
@@ -78,7 +75,9 @@ func newPutCommand(clientFactory func() (Putter, error)) (*cobra.Command, error)
 				xcobra.PrintfErrAndExit(1, "%v\n", err)
 			}
 
-			printOffer(updatedOffer)
+			if err := sl.GetPrinter().Print(updatedOffer); err != nil {
+				log.Fatalf("unable to print offer: %v", err)
+			}
 		}),
 	}
 

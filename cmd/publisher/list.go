@@ -8,23 +8,18 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/pub/pkg/service"
+
 	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
 )
 
-type (
-	// Lister provides the ability to list publishers
-	Lister interface {
-		ListPublishers(ctx context.Context) ([]partner.Publisher, error)
-	}
-)
-
-func newListCommand(clientFactory func() (Lister, error)) (*cobra.Command, error) {
+func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "list all publishers",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := clientFactory()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
@@ -35,7 +30,9 @@ func newListCommand(clientFactory func() (Lister, error)) (*cobra.Command, error
 				log.Fatalf("unable to list offers: %v", err)
 			}
 
-			printPublishers(publishers)
+			if err := sl.GetPrinter().Print(publishers); err != nil {
+				log.Fatalf("unable to print publishers: %v", err)
+			}
 		}),
 	}
 	return cmd, nil

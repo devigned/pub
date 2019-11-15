@@ -2,10 +2,11 @@ package offer
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
+
+	"github.com/devigned/pub/pkg/service"
 
 	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
@@ -18,20 +19,15 @@ type (
 		Offer              string
 		NotificationEmails string
 	}
-
-	// Liver provides the ability to make an offer go live
-	Liver interface {
-		GoLiveWithOffer(ctx context.Context, params partner.GoLiveParams) (string, error)
-	}
 )
 
-func newGoLiveCommand(clientFactory func() (Liver, error)) (*cobra.Command, error) {
+func newGoLiveCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	var oArgs goLiveOfferArgs
 	cmd := &cobra.Command{
 		Use:   "live",
 		Short: "go live with an offer (make available to the world)",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := clientFactory()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
@@ -46,7 +42,9 @@ func newGoLiveCommand(clientFactory func() (Liver, error)) (*cobra.Command, erro
 				xcobra.PrintfErrAndExit(1, "%v\n", err)
 			}
 
-			fmt.Println(opLocation)
+			if err := sl.GetPrinter().Print(opLocation); err != nil {
+				log.Fatalf("unable to print location: %v", err)
+			}
 		}),
 	}
 

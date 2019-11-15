@@ -2,11 +2,11 @@ package operation
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
+
+	"github.com/devigned/pub/pkg/service"
 
 	"github.com/devigned/pub/cmd/args"
 	"github.com/devigned/pub/pkg/partner"
@@ -19,20 +19,15 @@ type (
 		Offer     string
 		Operation string
 	}
-
-	// Getter provides the ability to get an operation
-	Getter interface {
-		GetOperation(ctx context.Context, params partner.GetOperationParams) (*partner.OperationDetail, error)
-	}
 )
 
-func newShowCommand(clientFactory func() (Getter, error)) (*cobra.Command, error) {
+func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	var oArgs showOperationsArgs
 	cmd := &cobra.Command{
 		Use:   "show",
 		Short: "show an operation by Id",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
-			client, err := clientFactory()
+			client, err := sl.GetCloudPartnerService()
 			if err != nil {
 				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
 			}
@@ -47,7 +42,9 @@ func newShowCommand(clientFactory func() (Getter, error)) (*cobra.Command, error
 				xcobra.PrintfErrAndExit(1, "unable to fetch operations: %v", err)
 			}
 
-			printOp(op)
+			if err := sl.GetPrinter().Print(op); err != nil {
+				log.Fatalf("unable to print operation: %v", err)
+			}
 		}),
 	}
 
@@ -62,12 +59,4 @@ func newShowCommand(clientFactory func() (Getter, error)) (*cobra.Command, error
 	cmd.Flags().StringVar(&oArgs.Operation, "op", "", "Operation Id (guid).")
 	err := cmd.MarkFlagRequired("op")
 	return cmd, err
-}
-
-func printOp(op *partner.OperationDetail) {
-	bits, err := json.Marshal(op)
-	if err != nil {
-		xcobra.PrintfErrAndExit(1, "failed to print the operation: %v", err)
-	}
-	fmt.Print(string(bits))
 }
