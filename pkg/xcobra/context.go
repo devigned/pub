@@ -10,8 +10,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type (
+	// ErrorWithCode is an error that contains an os.Exit code
+	ErrorWithCode struct {
+		Code int
+	}
+)
+
+func (ewc ErrorWithCode) Error() string {
+	return fmt.Sprintf("failed with error code: %d", ewc.Code)
+}
+
+// NewErrorWithCode will return a new error with an os.Exit code
+func NewErrorWithCode(code int) *ErrorWithCode {
+	return &ErrorWithCode{
+		Code: code,
+	}
+}
+
 // RunWithCtx will run a command which will respect os signals and propagate the context to children
-func RunWithCtx(run func(ctx context.Context, cmd *cobra.Command, args []string)) func(cmd *cobra.Command, args []string) {
+func RunWithCtx(run func(ctx context.Context, cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Wait for a signal to quit:
@@ -28,17 +46,12 @@ func RunWithCtx(run func(ctx context.Context, cmd *cobra.Command, args []string)
 		defer span.End()
 		defer cancel()
 
-		run(ctx, cmd, args)
+		var err error
+		cmd.PostRunE = func(c *cobra.Command, args []string) error {
+			defer exitWithCode(err)
+			return err
+		}
+
+		err = run(ctx, cmd, args)
 	}
-}
-
-// PrintfErr prints a formatted string to Stderr
-func PrintfErr(format string, args ...interface{}) {
-	_, _ = fmt.Fprintf(os.Stderr, format, args...)
-}
-
-// PrintfErrAndExit prints a formatted string to Stderr and exits with code
-func PrintfErrAndExit(code int, format string, args ...interface{}) {
-	PrintfErr(format, args...)
-	os.Exit(code)
 }

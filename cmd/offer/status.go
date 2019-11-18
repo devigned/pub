@@ -2,7 +2,6 @@ package offer
 
 import (
 	"context"
-	"log"
 
 	"github.com/spf13/cobra"
 
@@ -18,10 +17,11 @@ func newStatusCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "show status for an offer",
-		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			client, err := sl.GetCloudPartnerService()
 			if err != nil {
-				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to create Cloud Partner Portal client: %v", err)
+				return err
 			}
 
 			status, err := client.GetOfferStatus(ctx, partner.ShowOfferParams{
@@ -29,13 +29,11 @@ func newStatusCommand(sl service.CommandServicer) (*cobra.Command, error) {
 				OfferID:     oArgs.Offer,
 			})
 			if err != nil {
-				log.Printf("error: %v", err)
-				return
+				sl.GetPrinter().ErrPrintf("error: %v", err)
+				return err
 			}
 
-			if err := sl.GetPrinter().Print(status); err != nil {
-				log.Fatalf("unable to print offer status: %v", err)
-			}
+			return sl.GetPrinter().Print(status)
 		}),
 	}
 

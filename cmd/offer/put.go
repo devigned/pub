@@ -3,8 +3,8 @@ package offer
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"strings"
 
 	"github.com/Jeffail/gabs"
@@ -28,33 +28,39 @@ func newPutCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "put",
 		Short: "create or update an offer",
-		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			bits, err := ioutil.ReadFile(oArgs.OfferFilePath)
 			if err != nil {
-				xcobra.PrintfErrAndExit(1, "%v\n", err)
+				sl.GetPrinter().ErrPrintf("%v\n", err)
+				return err
 			}
 
 			if len(oArgs.Set) > 0 {
 				parsedJSON, err := gabs.ParseJSON(bits)
 				if err != nil {
-					xcobra.PrintfErrAndExit(1, "%v\n", err)
+					sl.GetPrinter().ErrPrintf("%v\n", err)
+					return err
 				}
 
 				setJSON := gabs.New()
 				for _, item := range oArgs.Set {
 					splits := strings.Split(item, "=")
 					if len(splits) != 2 {
-						xcobra.PrintfErrAndExit(1, "the set item %s was not in key.keypart=value format", item)
+						err := fmt.Errorf("the set item %s was not in key.keypart=value format", item)
+						sl.GetPrinter().ErrPrintf("%v\n", err)
+						return err
 					}
 
 					_, err := setJSON.SetP(splits[1], splits[0])
 					if err != nil {
-						xcobra.PrintfErrAndExit(1, "could not add item '%s'", item)
+						sl.GetPrinter().ErrPrintf("could not add item '%s'", item)
+						return err
 					}
 				}
 
 				if err = setJSON.Merge(parsedJSON); err != nil {
-					xcobra.PrintfErrAndExit(1, "unable to merge JSON from the offer file and the set key / values")
+					sl.GetPrinter().ErrPrintf("unable to merge JSON from the offer file and the set key / values")
+					return err
 				}
 
 				bits = parsedJSON.Bytes()
@@ -62,22 +68,23 @@ func newPutCommand(sl service.CommandServicer) (*cobra.Command, error) {
 
 			var offer partner.Offer
 			if err := json.Unmarshal(bits, &offer); err != nil {
-				xcobra.PrintfErrAndExit(1, "unable unmarshal JSON offer into partner.Offer")
+				sl.GetPrinter().ErrPrintf("unable unmarshal JSON offer into partner.Offer")
+				return err
 			}
 
 			client, err := sl.GetCloudPartnerService()
 			if err != nil {
-				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to create Cloud Partner Portal client: %v", err)
+				return err
 			}
 
 			updatedOffer, err := client.PutOffer(ctx, &offer)
 			if err != nil {
-				xcobra.PrintfErrAndExit(1, "%v\n", err)
+				sl.GetPrinter().ErrPrintf("%v\n", err)
+				return err
 			}
 
-			if err := sl.GetPrinter().Print(updatedOffer); err != nil {
-				log.Fatalf("unable to print offer: %v", err)
-			}
+			return sl.GetPrinter().Print(updatedOffer)
 		}),
 	}
 

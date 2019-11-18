@@ -2,7 +2,6 @@ package operation
 
 import (
 	"context"
-	"log"
 
 	"github.com/spf13/cobra"
 
@@ -22,20 +21,20 @@ func newGetCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "get",
 		Short: "get an operation by URI fom a long running activity. Like the URI returned from `pub offers live` or `pub offers publish`.",
-		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			client, err := sl.GetCloudPartnerService()
 			if err != nil {
-				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to create Cloud Partner Portal client: %v", err)
+				return err
 			}
 
 			op, err := client.GetOperationByURI(ctx, oArgs.OperationURI)
 			if err != nil {
-				xcobra.PrintfErrAndExit(1, "unable to fetch operations: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to fetch operations: %v", err)
+				return err
 			}
 
-			if err := sl.GetPrinter().Print(op); err != nil {
-				log.Fatalf("unable to print operation: %v", err)
-			}
+			return sl.GetPrinter().Print(op)
 		}),
 	}
 

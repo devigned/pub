@@ -2,7 +2,6 @@ package offer
 
 import (
 	"context"
-	"log"
 
 	"github.com/spf13/cobra"
 
@@ -26,10 +25,11 @@ func newPublishCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "publish",
 		Short: "publish an offer",
-		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			client, err := sl.GetCloudPartnerService()
 			if err != nil {
-				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to create Cloud Partner Portal client: %v", err)
+				return err
 			}
 
 			opLocation, err := client.PublishOffer(ctx, partner.PublishOfferParams{
@@ -39,12 +39,11 @@ func newPublishCommand(sl service.CommandServicer) (*cobra.Command, error) {
 			})
 
 			if err != nil {
-				xcobra.PrintfErrAndExit(1, "%v\n", err)
+				sl.GetPrinter().ErrPrintf("%v\n", err)
+				return err
 			}
 
-			if err := sl.GetPrinter().Print(opLocation); err != nil {
-				log.Fatalf("unable to print location: %v", err)
-			}
+			return sl.GetPrinter().Print(opLocation)
 		}),
 	}
 

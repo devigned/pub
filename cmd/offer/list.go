@@ -2,7 +2,6 @@ package offer
 
 import (
 	"context"
-	"log"
 
 	"github.com/spf13/cobra"
 
@@ -24,10 +23,11 @@ func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "list all offers",
-		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			client, err := sl.GetCloudPartnerService()
 			if err != nil {
-				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to create Cloud Partner Portal client: %v", err)
+				return err
 			}
 
 			offers, err := client.ListOffers(ctx, partner.ListOffersParams{
@@ -35,12 +35,11 @@ func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
 			})
 
 			if err != nil {
-				log.Fatalf("unable to list offers: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to list offers: %v", err)
+				return err
 			}
 
-			if err := sl.GetPrinter().Print(offers); err != nil {
-				log.Fatalf("unable to print offers: %v", err)
-			}
+			return sl.GetPrinter().Print(offers)
 		}),
 	}
 

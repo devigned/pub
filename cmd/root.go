@@ -54,7 +54,7 @@ func newRootCommand() (*cobra.Command, error) {
 			return partner.New(apiVersion)
 		},
 		PrinterFactory: func() format.Printer {
-			return &format.StdoutPrinter{
+			return &format.StdPrinter{
 				Format: format.JSONFormat,
 			}
 		},

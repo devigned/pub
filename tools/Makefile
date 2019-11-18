@@ -1,15 +1,20 @@
-GO 		?= go
-GOBIN	?= $(shell $(GO) env GOPATH)/bin
-GOLINT	= $(GOBIN)/golint
+GO 			?= go
+LOCALBIN 	= $(shell pwd)/bin
 
-default: all
+default: install
 
-all: $(GOBIN)/golint $(GOBIN)/goveralls
+install: $(LOCALBIN)/golint $(LOCALBIN)/goveralls
 	@echo > /dev/null
 
-$(GOBIN)/golint:
-	$(GO) get golang.org/x/lint/golint
+$(LOCALBIN)/golint:
+	GOBIN=$(LOCALBIN) $(GO) get golang.org/x/lint/golint
 
-$(GOBIN)/goveralls:
-	$(GO) get github.com/mattn/goveralls
+$(LOCALBIN)/goveralls:
+	GOBIN=$(LOCALBIN) $(GO) get github.com/mattn/goveralls
 
+.PHONY: reload
+reload: clean install
+
+.PHONY: clean
+clean:
+	rm -rf $(LOCALBIN)

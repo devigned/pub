@@ -2,9 +2,6 @@ package version
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"log"
 
 	"github.com/spf13/cobra"
 
@@ -29,10 +26,11 @@ func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "show",
 		Short: "show a version for a given plan",
-		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			client, err := sl.GetCloudPartnerService()
 			if err != nil {
-				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to create Cloud Partner Portal client: %v", err)
+				return err
 			}
 
 			offer, err := client.GetOffer(ctx, partner.ShowOfferParams{
@@ -41,7 +39,8 @@ func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 			})
 
 			if err != nil {
-				log.Fatalf("unable to list offers: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to list offers: %v", err)
+				return err
 			}
 
 			var versions map[string]partner.VirtualMachineImage
@@ -53,15 +52,10 @@ func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 			}
 
 			if version, ok := versions[oArgs.Version]; ok {
-				if err := sl.GetPrinter().Print(version); err != nil {
-					log.Fatalf("unable to print version: %v", err)
-				}
-				return
+				return sl.GetPrinter().Print(version)
 			}
 
-			if err := sl.GetPrinter().Print("no version found"); err != nil {
-				log.Fatalf("unable to print: %v", err)
-			}
+			return sl.GetPrinter().Print("no version found")
 		}),
 	}
 
@@ -81,12 +75,4 @@ func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd.Flags().StringVar(&oArgs.Version, "version", "", "String that uniquely identifies the version.")
 	err := cmd.MarkFlagRequired("version")
 	return cmd, err
-}
-
-func printVersion(version partner.VirtualMachineImage) {
-	bits, err := json.Marshal(version)
-	if err != nil {
-		log.Fatalf("failed to print plans: %v", err)
-	}
-	fmt.Print(string(bits))
 }

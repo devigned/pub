@@ -2,7 +2,6 @@ package version
 
 import (
 	"context"
-	"log"
 
 	"github.com/spf13/cobra"
 
@@ -114,10 +113,11 @@ func bindPutArgs(cmd *cobra.Command, oArgs *putImageVersionsArgs) (*cobra.Comman
 }
 
 func getAndPutMutatedPlan(sl service.CommandServicer, oArgs *putImageVersionsArgs, mutator func(plan *partner.Plan, version string, vm partner.VirtualMachineImage)) func(cmd *cobra.Command, args []string) {
-	return xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+	return xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 		client, err := sl.GetCloudPartnerService()
 		if err != nil {
-			log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
+			sl.GetPrinter().ErrPrintf("unable to create Cloud Partner Portal client: %v", err)
+			return err
 		}
 
 		offer, err := client.GetOffer(ctx, partner.ShowOfferParams{
@@ -126,24 +126,25 @@ func getAndPutMutatedPlan(sl service.CommandServicer, oArgs *putImageVersionsArg
 		})
 
 		if err != nil {
-			xcobra.PrintfErrAndExit(1, "unable to list offers: %v", err)
+			sl.GetPrinter().ErrPrintf("unable to list offers: %v", err)
+			return err
 		}
 
 		plan := offer.GetPlanByID(oArgs.SKU)
 
 		if plan == nil {
-			xcobra.PrintfErrAndExit(1, "no plan was found")
+			sl.GetPrinter().ErrPrintf("no plan was found")
+			return err
 		}
 
 		mutator(plan, oArgs.Version, oArgs.Image)
 
 		offer, err = client.PutOffer(ctx, offer)
 		if err != nil {
-			xcobra.PrintfErrAndExit(1, "unable to list offers: %v", err)
+			sl.GetPrinter().ErrPrintf("unable to list offers: %v", err)
+			return err
 		}
 
-		if err := sl.GetPrinter().Print(offer.GetPlanByID(oArgs.SKU).GetVMImages()); err != nil {
-			log.Fatalf("unable to print vm images: %v", err)
-		}
+		return sl.GetPrinter().Print(offer.GetPlanByID(oArgs.SKU).GetVMImages())
 	})
 }
