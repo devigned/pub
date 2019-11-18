@@ -2,15 +2,11 @@ package publisher
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"log"
 
 	"github.com/spf13/cobra"
 
 	"github.com/devigned/pub/pkg/service"
 
-	"github.com/devigned/pub/pkg/partner"
 	"github.com/devigned/pub/pkg/xcobra"
 )
 
@@ -36,12 +32,4 @@ func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
 		}),
 	}
 	return cmd, nil
-}
-
-func printPublishers(publishers []partner.Publisher) {
-	bits, err := json.Marshal(publishers)
-	if err != nil {
-		log.Fatalf("failed to print publishers: %v", err)
-	}
-	fmt.Print(string(bits))
 }
