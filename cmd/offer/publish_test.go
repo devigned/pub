@@ -25,8 +25,8 @@ func TestPublishCommand_FailOnPublishError(t *testing.T) {
 	boomErr := errors.New("boom")
 	svcMock := new(test.CloudPartnerServiceMock)
 	svcMock.On("PublishOffer", mock.Anything, partner.PublishOfferParams{
-		PublisherID: "foo",
-		OfferID: "bar",
+		PublisherID:        "foo",
+		OfferID:            "bar",
 		NotificationEmails: "joe@microsoft.com,jane@microsoft.com",
 	}).Return("", boomErr)
 	prtMock := new(test.PrinterMock)

@@ -25,8 +25,8 @@ func TestListCommand_FailOnGoLiveError(t *testing.T) {
 	boomErr := errors.New("boom")
 	svcMock := new(test.CloudPartnerServiceMock)
 	svcMock.On("GoLiveWithOffer", mock.Anything, partner.GoLiveParams{
-		PublisherID: "foo",
-		OfferID: "bar",
+		PublisherID:        "foo",
+		OfferID:            "bar",
 		NotificationEmails: "joe@microsoft.com,jane@microsoft.com",
 	}).Return("", boomErr)
 	prtMock := new(test.PrinterMock)

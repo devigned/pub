@@ -11,17 +11,17 @@ import (
 
 func TestBind(t *testing.T) {
 	cases := []struct {
-		Name string
+		Name     string
 		BindFunc func(command *cobra.Command, binder *string) error
 		FlagName string
 	}{
 		{
-			Name: "Publisher",
+			Name:     "Publisher",
 			BindFunc: args.BindPublisher,
 			FlagName: "publisher",
 		},
 		{
-			Name: "Offer",
+			Name:     "Offer",
 			BindFunc: args.BindOffer,
 			FlagName: "offer",
 		},

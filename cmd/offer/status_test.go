@@ -12,48 +12,49 @@ import (
 	"github.com/devigned/pub/pkg/partner"
 )
 
-func TestShowCommand_FailOnInsufficientArgs(t *testing.T) {
-	test.VerifyFailsOnArgs(t, newShowCommand)
-	test.VerifyFailsOnArgs(t, newShowCommand, "-p", "foo")
+func TestStatusCommand_FailOnInsufficientArgs(t *testing.T) {
+	test.VerifyFailsOnArgs(t, newStatusCommand)
+	test.VerifyFailsOnArgs(t, newStatusCommand, "-p", "foo")
 }
 
-func TestShowCommand_FailOnCloudPartnerServiceError(t *testing.T) {
-	test.VerifyCloudPartnerServiceCommand(t, newShowCommand, "-p", "foo", "-o", "bar")
+func TestStatusCommand_FailOnCloudPartnerServiceError(t *testing.T) {
+	test.VerifyCloudPartnerServiceCommand(t, newStatusCommand, "-p", "foo", "-o", "bar")
 }
 
-func TestShowCommand_FailOnGetOfferError(t *testing.T) {
+func TestStatusCommand_FailOnGetOfferError(t *testing.T) {
 	boomErr := errors.New("boom")
 	svcMock := new(test.CloudPartnerServiceMock)
-	svcMock.On("GetOffer", mock.Anything, partner.ShowOfferParams{
+	svcMock.On("GetOfferStatus", mock.Anything, partner.ShowOfferParams{
 		PublisherID: "foo",
 		OfferID:     "bar",
-	}).Return(new(partner.Offer), boomErr)
+	}).Return(new(partner.OfferStatus), boomErr)
 	prtMock := new(test.PrinterMock)
 	prtMock.On("ErrPrintf", "error: %v", []interface{}{boomErr}).Return(nil)
 	rm := new(test.RegistryMock)
 	rm.On("GetCloudPartnerService").Return(svcMock, nil)
 	rm.On("GetPrinter").Return(prtMock)
 
-	cmd, err := test.QuietCommand(newShowCommand(rm))
+	cmd, err := test.QuietCommand(newStatusCommand(rm))
 	require.NoError(t, err)
 	cmd.SetArgs([]string{"-p", "foo", "-o", "bar"})
 	assert.Error(t, cmd.Execute())
 }
 
-func TestShowCommand_Success(t *testing.T) {
+func TestStatusCommand_Success(t *testing.T) {
 	offer := test.NewMarketplaceVMOffer()
+	status := new(partner.OfferStatus)
 	svcMock := new(test.CloudPartnerServiceMock)
-	svcMock.On("GetOffer", mock.Anything, partner.ShowOfferParams{
+	svcMock.On("GetOfferStatus", mock.Anything, partner.ShowOfferParams{
 		PublisherID: offer.PublisherID,
 		OfferID:     offer.ID,
-	}).Return(offer, nil)
+	}).Return(status, nil)
 	prtMock := new(test.PrinterMock)
-	prtMock.On("Print", offer).Return(nil)
+	prtMock.On("Print", status).Return(nil)
 	rm := new(test.RegistryMock)
 	rm.On("GetCloudPartnerService").Return(svcMock, nil)
 	rm.On("GetPrinter").Return(prtMock)
 
-	cmd, err := test.QuietCommand(newShowCommand(rm))
+	cmd, err := test.QuietCommand(newStatusCommand(rm))
 	require.NoError(t, err)
 	cmd.SetArgs([]string{"-p", offer.PublisherID, "-o", offer.ID})
 	assert.NoError(t, cmd.Execute())

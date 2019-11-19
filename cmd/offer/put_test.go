@@ -90,4 +90,3 @@ func TestPutCommand_MergeOfferSuccess(t *testing.T) {
 	offer.Definition.DisplayText = "foo"
 	prtMock.AssertCalled(t, "Print", offer)
 }
-
