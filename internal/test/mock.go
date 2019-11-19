@@ -112,8 +112,8 @@ func (cpsm *CloudPartnerServiceMock) ListPublishers(ctx context.Context) ([]part
 	return args.Get(0).([]partner.Publisher), args.Error(1)
 }
 
-// NewTestOffer returns a valid offer for testing
-func NewTestOffer() *partner.Offer {
+// NewMarketplaceVMOffer returns a valid offer for testing
+func NewMarketplaceVMOffer() *partner.Offer {
 	changed, _ := date.ParseTime(time.RFC3339Nano, "2019-10-30T22:03:51.2917913Z")
 
 	return &partner.Offer{

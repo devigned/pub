@@ -39,7 +39,7 @@ func TestListCommand_FailOnListOffersError(t *testing.T) {
 }
 
 func TestListCommand_WithPublisherAndOfferArgs(t *testing.T) {
-	offer := test.NewTestOffer()
+	offer := test.NewMarketplaceVMOffer()
 	offers := []partner.Offer{*offer}
 	svcMock := new(test.CloudPartnerServiceMock)
 	svcMock.On("ListOffers", mock.Anything, partner.ListOffersParams{

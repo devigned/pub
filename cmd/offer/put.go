@@ -42,7 +42,6 @@ func newPutCommand(sl service.CommandServicer) (*cobra.Command, error) {
 					return err
 				}
 
-				setJSON := gabs.New()
 				for _, item := range oArgs.Set {
 					splits := strings.Split(item, "=")
 					if len(splits) != 2 {
@@ -51,16 +50,11 @@ func newPutCommand(sl service.CommandServicer) (*cobra.Command, error) {
 						return err
 					}
 
-					_, err := setJSON.SetP(splits[1], splits[0])
+					_, err := parsedJSON.SetP(splits[1], splits[0])
 					if err != nil {
 						sl.GetPrinter().ErrPrintf("could not add item '%s'", item)
 						return err
 					}
-				}
-
-				if err = setJSON.Merge(parsedJSON); err != nil {
-					sl.GetPrinter().ErrPrintf("unable to merge JSON from the offer file and the set key / values")
-					return err
 				}
 
 				bits = parsedJSON.Bytes()
