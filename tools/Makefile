@@ -3,7 +3,7 @@ LOCALBIN 	= $(shell pwd)/bin
 
 default: install
 
-install: $(LOCALBIN)/golint $(LOCALBIN)/goveralls
+install: $(LOCALBIN)/golint $(LOCALBIN)/goveralls $(LOCALBIN)/gox
 	@echo > /dev/null
 
 $(LOCALBIN)/golint:
@@ -11,6 +11,9 @@ $(LOCALBIN)/golint:
 
 $(LOCALBIN)/goveralls:
 	GOBIN=$(LOCALBIN) $(GO) get github.com/mattn/goveralls
+
+$(LOCALBIN)/gox:
+	GOBIN=$(LOCALBIN) $(GO) get github.com/mitchellh/gox
 
 .PHONY: reload
 reload: clean install
