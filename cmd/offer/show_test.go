@@ -57,4 +57,5 @@ func TestShowCommand_Success(t *testing.T) {
 	require.NoError(t, err)
 	cmd.SetArgs([]string{"-p", offer.PublisherID, "-o", offer.ID})
 	assert.NoError(t, cmd.Execute())
+	prtMock.AssertCalled(t, "Print", offer)
 }
