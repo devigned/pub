@@ -21,7 +21,7 @@ func TestStatusCommand_FailOnCloudPartnerServiceError(t *testing.T) {
 	test.VerifyCloudPartnerServiceCommand(t, newStatusCommand, "-p", "foo", "-o", "bar")
 }
 
-func TestStatusCommand_FailOnGetOfferError(t *testing.T) {
+func TestStatusCommand_FailOnGetOfferStatusError(t *testing.T) {
 	boomErr := errors.New("boom")
 	svcMock := new(test.CloudPartnerServiceMock)
 	svcMock.On("GetOfferStatus", mock.Anything, partner.ShowOfferParams{

@@ -39,7 +39,7 @@ func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 			})
 
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to fetch operations: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to get operation: %v", err)
 				return err
 			}
 
