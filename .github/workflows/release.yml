@@ -1,0 +1,61 @@
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+name: release
+
+jobs:
+  build:
+    name: tag release
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@master
+      - name: make gox
+        env:
+          VERSION: ${{ github.ref }}
+          SHORT_VERSION: ${{ github.ref }}
+        run: |
+          make gox
+      - name: create github release
+        id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: upload linux-amd64
+        id: upload-linux-amd64 
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/${{ github.ref }}/pub_linux_amd64.tar.gz
+          asset_name: pub_${{ github.ref }}_linux_amd64.tar.gz
+          asset_content_type: application/gzip
+      - name: upload darwin-amd64
+        id: upload-darwin-amd64 
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/${{ github.ref }}/pub_darwin_amd64.tar.gz
+          asset_name: pub_${{ github.ref }}_darwin_amd64.tar.gz
+          asset_content_type: application/gzip
+      - name: upload windows-amd64
+        id: upload-windows-amd64 
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/${{ github.ref }}/pub_windows_amd64.tar.gz
+          asset_name: pub_${{ github.ref }}_windows_amd64.tar.gz
+          asset_content_type: application/gzip
