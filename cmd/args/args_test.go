@@ -27,15 +27,14 @@ func TestBind(t *testing.T) {
 		},
 	}
 
-	arg := struct {
-		binder string
-	}{}
-
 	for _, tc := range cases {
 		c := tc
 		t.Run(c.Name, func(t *testing.T) {
 			t.Parallel()
 
+			arg := struct {
+				binder string
+			}{}
 			cmd := new(cobra.Command)
 			assert.NoError(t, c.BindFunc(cmd, &arg.binder))
 			f := cmd.Flag(c.FlagName)
