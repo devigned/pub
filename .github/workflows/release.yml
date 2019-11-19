@@ -13,10 +13,12 @@ jobs:
     steps:
       - name: checkout code
         uses: actions/checkout@master
+      - name: Set env
+        run: echo ::set-env name=RELEASE_VERSION::$(echo ${GITHUB_REF:10})
       - name: make gox
         env:
-          VERSION: ${{ github.ref }}
-          SHORT_VERSION: ${{ github.ref }}
+          VERSION: ${{ env.RELEASE_VERSION }}
+          SHORT_VERSION: ${{ env.RELEASE_VERSION }}
         run: |
           make gox
       - name: create github release
@@ -36,8 +38,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bin/${{ github.ref }}/pub_linux_amd64.tar.gz
-          asset_name: pub_${{ github.ref }}_linux_amd64.tar.gz
+          asset_path: ./bin/${{ env.RELEASE_VERSION }}/pub_linux_amd64.tar.gz
+          asset_name: pub_${{ env.RELEASE_VERSION }}_linux_amd64.tar.gz
           asset_content_type: application/gzip
       - name: upload darwin-amd64
         id: upload-darwin-amd64 
@@ -46,8 +48,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bin/${{ github.ref }}/pub_darwin_amd64.tar.gz
-          asset_name: pub_${{ github.ref }}_darwin_amd64.tar.gz
+          asset_path: ./bin/${{ env.RELEASE_VERSION }}/pub_darwin_amd64.tar.gz
+          asset_name: pub_${{ env.RELEASE_VERSION }}_darwin_amd64.tar.gz
           asset_content_type: application/gzip
       - name: upload windows-amd64
         id: upload-windows-amd64 
@@ -56,6 +58,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bin/${{ github.ref }}/pub_windows_amd64.tar.gz
-          asset_name: pub_${{ github.ref }}_windows_amd64.tar.gz
+          asset_path: ./bin/${{ env.RELEASE_VERSION }}/pub_windows_amd64.tar.gz
+          asset_name: pub_${{ env.RELEASE_VERSION }}_windows_amd64.tar.gz
           asset_content_type: application/gzip
