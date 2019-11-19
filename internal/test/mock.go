@@ -1,4 +1,4 @@
-package offer
+package test
 
 import (
 	"context"
@@ -40,6 +40,11 @@ func (rm *RegistryMock) GetPrinter() format.Printer {
 func (pm *PrinterMock) Print(obj interface{}) error {
 	args := pm.Called(obj)
 	return args.Error(0)
+}
+
+func (pm *PrinterMock) ErrPrintf(format string, objs ...interface{}) {
+	pm.Called(format, objs)
+	return
 }
 
 func (cpsm *CloudPartnerServiceMock) ListOffers(ctx context.Context, params partner.ListOffersParams) ([]partner.Offer, error) {
@@ -107,7 +112,8 @@ func (cpsm *CloudPartnerServiceMock) ListPublishers(ctx context.Context) ([]part
 	return args.Get(0).([]partner.Publisher), args.Error(1)
 }
 
-func newTestOffer() *partner.Offer {
+// NewMarketplaceVMOffer returns a valid offer for testing
+func NewMarketplaceVMOffer() *partner.Offer {
 	changed, _ := date.ParseTime(time.RFC3339Nano, "2019-10-30T22:03:51.2917913Z")
 
 	return &partner.Offer{

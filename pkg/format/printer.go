@@ -11,6 +11,7 @@ type (
 	// Printer prints objects
 	Printer interface {
 		Print(obj interface{}) error
+		ErrPrintf(format string, args ...interface{})
 	}
 
 	// Printable is an object that can format itself
@@ -18,8 +19,8 @@ type (
 		Print(writer io.Writer, format OutputType) error
 	}
 
-	// StdoutPrinter is a printer that prints to os.Stdout
-	StdoutPrinter struct {
+	// StdPrinter is a printer that prints to os.Stdout
+	StdPrinter struct {
 		Format OutputType
 	}
 
@@ -33,7 +34,7 @@ var (
 )
 
 // Print prints an object to os.Stdout
-func (stdPrinter StdoutPrinter) Print(obj interface{}) error {
+func (stdPrinter StdPrinter) Print(obj interface{}) error {
 	if printable, ok := obj.(Printable); ok {
 		return printable.Print(os.Stdout, stdPrinter.Format)
 	}
@@ -44,6 +45,11 @@ func (stdPrinter StdoutPrinter) Print(obj interface{}) error {
 	default:
 		return fmt.Errorf("unable to print %v as type %s", obj, stdPrinter.Format)
 	}
+}
+
+// ErrPrintf will print a formatted string to os.Stderr
+func (StdPrinter) ErrPrintf(format string, args ...interface{}) {
+	_, _ = fmt.Fprintf(os.Stderr, format, args...)
 }
 
 func printJSON(writer io.Writer, obj interface{}) error {

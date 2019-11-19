@@ -7,13 +7,14 @@ GOBIN      		?= $(HOME)/go/bin
 GOFMT   		= gofmt
 GO      		= go
 PKGS     		= $(or $(PKG),$(shell $(GO) list ./... | grep -vE "^$(PACKAGE)/templates/"))
-GOLINT			= $(GOBIN)/golint
+TOOLSBIN		= $(shell pwd)/tools/bin
+GOLINT			= $(TOOLSBIN)/golint
 
 V = 0
 Q = $(if $(filter 1,$V),,@)
 
 .PHONY: all
-all: install-tools fmt lint vet tidy build test
+all: install-tools fmt lint vet tidy build
 
 install-tools: ; $(info $(M) installing tools…)
 	$(Q) make -C ./tools
@@ -23,7 +24,7 @@ build: lint tidy ; $(info $(M) buiding ./bin/pub)
 
 .PHONY: lint
 lint: $(GOLINT) ; $(info $(M) running golint…) @ ## Run golint
-	$Q test -z "$$($(GOLINT) ./... | tee /dev/stderr)" || exit 1
+	$(Q) $(GOLINT) -set_exit_status `go list ./... | grep -v /internal/`
 
 .PHONY: fmt
 fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
@@ -45,12 +46,12 @@ build-debug: ; $(info $(M) buiding debug...)
 
 .PHONY: test
 test: ; $(info $(M) running go test…)
-	$(Q) $(GO) test ./...
+	$(Q) $(GO) test ./... -tags=noexit
 
 .PHONY: test-cover
 test-cover: ; $(info $(M) running go test…)
-	$(Q) $(GO) test -race -covermode atomic -coverprofile=profile.cov ./...
-	$(Q) $(GOBIN)/goveralls -coverprofile=profile.cov -service=github
+	$(Q) $(GO) test -tags=noexit -race -covermode atomic -coverprofile=profile.cov ./...
+	$(Q) $(TOOLSBIN)/goveralls -coverprofile=profile.cov -service=github
 
 .PHONY: gox
 gox:

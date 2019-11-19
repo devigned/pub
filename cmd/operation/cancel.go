@@ -2,7 +2,6 @@ package operation
 
 import (
 	"context"
-	"log"
 
 	"github.com/spf13/cobra"
 
@@ -26,10 +25,11 @@ func newCancelCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "cancel",
 		Short: "cancel the active operation for a given offer and print the operations",
-		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			client, err := sl.GetCloudPartnerService()
 			if err != nil {
-				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to create Cloud Partner Portal client: %v", err)
+				return err
 			}
 
 			opLocation, err := client.CancelOperation(ctx, partner.CancelOperationParams{
@@ -39,13 +39,11 @@ func newCancelCommand(sl service.CommandServicer) (*cobra.Command, error) {
 			})
 
 			if err != nil {
-				xcobra.PrintfErrAndExit(1, "unable to cancel the active operation: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to cancel the active operation: %v", err)
+				return err
 			}
 
-			if err := sl.GetPrinter().Print(opLocation); err != nil {
-				log.Fatalf("unable to print location: %v", err)
-			}
-
+			return sl.GetPrinter().Print(opLocation)
 		}),
 	}
 

@@ -2,7 +2,6 @@ package version
 
 import (
 	"context"
-	"log"
 
 	"github.com/spf13/cobra"
 
@@ -27,10 +26,11 @@ func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "list all versions for a given plan",
-		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			client, err := sl.GetCloudPartnerService()
 			if err != nil {
-				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to create Cloud Partner Portal client: %v", err)
+				return err
 			}
 
 			offer, err := client.GetOffer(ctx, partner.ShowOfferParams{
@@ -39,7 +39,8 @@ func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
 			})
 
 			if err != nil {
-				log.Fatalf("unable to list offers: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to list versions: %v", err)
+				return err
 			}
 
 			var versions map[string]partner.VirtualMachineImage
@@ -50,9 +51,7 @@ func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
 				}
 			}
 
-			if err := sl.GetPrinter().Print(versions); err != nil {
-				log.Fatalf("unable to print versions: %v", err)
-			}
+			return sl.GetPrinter().Print(versions)
 		}),
 	}
 

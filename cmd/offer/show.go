@@ -2,9 +2,6 @@ package offer
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"log"
 
 	"github.com/spf13/cobra"
 
@@ -30,10 +27,11 @@ func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "show",
 		Short: "show an offer",
-		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			client, err := sl.GetCloudPartnerService()
 			if err != nil {
-				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to create Cloud Partner Portal client: %v", err)
+				return err
 			}
 
 			var offer *partner.Offer
@@ -45,7 +43,8 @@ func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 					SlotID:      oArgs.Slot,
 				})
 				if err != nil {
-					log.Printf("error: %v", err)
+					sl.GetPrinter().ErrPrintf("error: %v", err)
+					return err
 				}
 				offer = o
 			case oArgs.Version != -1:
@@ -55,8 +54,8 @@ func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 					Version:     oArgs.Version,
 				})
 				if err != nil {
-					log.Printf("error: %v", err)
-					return
+					sl.GetPrinter().ErrPrintf("error: %v", err)
+					return err
 				}
 				offer = o
 			default:
@@ -65,15 +64,13 @@ func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 					OfferID:     oArgs.Offer,
 				})
 				if err != nil {
-					log.Printf("error: %v", err)
-					return
+					sl.GetPrinter().ErrPrintf("error: %v", err)
+					return err
 				}
 				offer = o
 			}
 
-			if err := sl.GetPrinter().Print(offer); err != nil {
-				log.Fatalf("unable to print offer: %v", err)
-			}
+			return sl.GetPrinter().Print(offer)
 		}),
 	}
 
@@ -88,14 +85,4 @@ func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd.Flags().IntVar(&oArgs.Version, "version", -1, "Version of the offer being retrieved. By default, the latest offer version is retrieved")
 	cmd.Flags().StringVar(&oArgs.Slot, "slot", "", "The slot from which the offer is to be retrieved, can be one of: Draft (default) retrieves the offer version currently in draft. Preview retrieves the offer version currently in preview. Production retrieves the offer version currently in production.")
 	return cmd, nil
-}
-
-var ()
-
-func printOffer(offer *partner.Offer) {
-	bits, err := json.Marshal(offer)
-	if err != nil {
-		log.Fatalf("failed to print offers: %v", err)
-	}
-	fmt.Print(string(bits))
 }

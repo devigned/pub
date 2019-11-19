@@ -2,9 +2,6 @@ package sku
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"log"
 
 	"github.com/spf13/cobra"
 
@@ -27,10 +24,11 @@ func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "list all SKUs for a given offer and publisher",
-		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) {
+		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			client, err := sl.GetCloudPartnerService()
 			if err != nil {
-				log.Fatalf("unable to create Cloud Partner Portal client: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to create Cloud Partner Portal client: %v", err)
+				return err
 			}
 
 			offer, err := client.GetOffer(ctx, partner.ShowOfferParams{
@@ -39,12 +37,11 @@ func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
 			})
 
 			if err != nil {
-				log.Fatalf("unable to fetch the offer: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to fetch the offer: %v", err)
+				return err
 			}
 
-			if err := sl.GetPrinter().Print(offer.Definition.Plans); err != nil {
-				log.Fatalf("unable to print offer plans: %v", err)
-			}
+			return sl.GetPrinter().Print(offer.Definition.Plans)
 		}),
 	}
 
@@ -57,12 +54,4 @@ func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	}
 
 	return cmd, nil
-}
-
-func printPlans(plans []partner.Plan) {
-	bits, err := json.Marshal(plans)
-	if err != nil {
-		log.Fatalf("failed to print SKUs: %v", err)
-	}
-	fmt.Print(string(bits))
 }
