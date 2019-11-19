@@ -24,7 +24,7 @@ func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
 			publishers, err := client.ListPublishers(ctx)
 
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to list offers: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to list publishers: %v", err)
 				return err
 			}
 
