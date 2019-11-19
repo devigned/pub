@@ -39,7 +39,7 @@ func newListCommand(sl service.CommandServicer) (*cobra.Command, error) {
 			})
 
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to list offers: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to list versions: %v", err)
 				return err
 			}
 

@@ -126,7 +126,7 @@ func getAndPutMutatedPlan(sl service.CommandServicer, oArgs *putImageVersionsArg
 		})
 
 		if err != nil {
-			sl.GetPrinter().ErrPrintf("unable to list offers: %v", err)
+			sl.GetPrinter().ErrPrintf("unable to get offer: %v", err)
 			return err
 		}
 
@@ -141,7 +141,7 @@ func getAndPutMutatedPlan(sl service.CommandServicer, oArgs *putImageVersionsArg
 
 		offer, err = client.PutOffer(ctx, offer)
 		if err != nil {
-			sl.GetPrinter().ErrPrintf("unable to list offers: %v", err)
+			sl.GetPrinter().ErrPrintf("unable to put offer: %v", err)
 			return err
 		}
 
