@@ -10,6 +10,15 @@ Portal, check out [Azure Docs](https://docs.microsoft.com/en-us/azure/marketplac
 The command line interface for `pub` is simply a facade over the [REST API exposed by the
 Cloud Partner Portal](https://docs.microsoft.com/en-us/azure/marketplace/cloud-partner-portal-orig/cloud-partner-portal-api-overview).
 
+## Install
+Easiest way is to use golang, but there are also precompiled binaries on the [releases page](https://github.com/devigned/pub/releases/).
+```
+$ go get github.com/devigned/pub
+...
+$ pub -h
+...
+```
+
 ## Usage
 From the top level, `pub` offers access to view and manipulate resources.
 ```
