@@ -56,9 +56,9 @@ test-cover: ; $(info $(M) running go test…)
 .PHONY: gox
 gox: install-tools
 	$(Q) $(TOOLSBIN)/gox -osarch="darwin/amd64 windows/amd64 linux/amd64" -ldflags "-X $(PACKAGE)/cmd.GitCommit=$(VERSION)" -output "./bin/$(SHORT_VERSION)/{{.Dir}}_{{.OS}}_{{.Arch}}"
-	$(Q) tar -czvf ./bin/$(SHORT_VERSION)/pub_darwin_amd64.tar.gz ./bin/$(SHORT_VERSION)/pub_darwin_amd64
-	$(Q) tar -czvf ./bin/$(SHORT_VERSION)/pub_linux_amd64.tar.gz ./bin/$(SHORT_VERSION)/pub_linux_amd64
-	$(Q) tar -czvf ./bin/$(SHORT_VERSION)/pub_windows_amd64.tar.gz ./bin/$(SHORT_VERSION)/pub_windows_amd64.exe
+	$(Q) tar -czvf ./bin/$(SHORT_VERSION)/pub_darwin_amd64.tar.gz -C ./bin/$(SHORT_VERSION)/ pub_darwin_amd64
+	$(Q) tar -czvf ./bin/$(SHORT_VERSION)/pub_linux_amd64.tar.gz -C ./bin/$(SHORT_VERSION)/ pub_linux_amd64
+	$(Q) tar -czvf ./bin/$(SHORT_VERSION)/pub_windows_amd64.tar.gz -C ./bin/$(SHORT_VERSION)/ pub_windows_amd64.exe
 
 .PHONY: ci
 ci: install-tools fmt lint vet tidy build test-cover
