@@ -14,11 +14,18 @@ func NewRootCmd(sl service.CommandServicer) (*cobra.Command, error) {
 		TraverseChildren: true,
 	}
 
-	list, err := newListCommand(sl)
-	if err != nil {
-		return rootCmd, err
+	cmdFuncs := []func(locator service.CommandServicer) (*cobra.Command, error){
+		newListCommand,
+		newShowCommand,
 	}
 
-	rootCmd.AddCommand(list)
-	return rootCmd, err
+	for _, f := range cmdFuncs {
+		cmd, err := f(sl)
+		if err != nil {
+			return rootCmd, err
+		}
+		rootCmd.AddCommand(cmd)
+	}
+
+	return rootCmd, nil
 }
