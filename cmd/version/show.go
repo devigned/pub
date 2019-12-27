@@ -67,8 +67,7 @@ func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 		return cmd, err
 	}
 
-	cmd.Flags().StringVarP(&oArgs.SKU, "sku", "s", "", "String that uniquely identifies the SKU (SKU ID).")
-	if err := cmd.MarkFlagRequired("sku"); err != nil {
+	if err := args.BindSKU(cmd, &oArgs.SKU); err != nil {
 		return cmd, err
 	}
 
