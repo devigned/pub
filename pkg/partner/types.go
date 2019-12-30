@@ -111,7 +111,7 @@ type (
 	PlanCoreVMDetail struct {
 		SKUTitle                   string                         `json:"microsoft-azure-corevm.skuTitle,omitempty"`
 		SKUSummary                 string                         `json:"microsoft-azure-corevm.skuSummary,omitempty"`
-		SKUDescription             string                         `json:"microsoft-azure-corevm.skuDescription,omitempty"`
+		SKULongSummary             string                         `json:"microsoft-azure-corevm.skuLongSummary,omitempty"`
 		HideSKUForSolutionTemplate *bool                          `json:"microsoft-azure-corevm.hideSKUForSolutionTemplate,omitempty"`
 		Hardened                   *bool                          `json:"microsoft-azure-corevm.hardened,omitempty"`
 		DeploymentModels           []DeploymentModelOption        `json:"microsoft-azure-corevm.deploymentModels,omitempty"`
@@ -125,11 +125,12 @@ type (
 		OSFriendlyName             string                         `json:"microsoft-azure-corevm.osFriendlyName,omitempty"`
 		RecommendedVMSizes         []string                       `json:"microsoft-azure-corevm.recommendedVMSizes,omitempty"`
 		SupportsHubOnOffSwitch     *bool                          `json:"microsoft-azure-corevm.supportsHubOnOffSwitch,omitempty"`
+		SupportsClientHub          *bool                          `json:"microsoft-azure-corevm.supportsClientHub,omitempty"`
 		IsPremiumThirdParty        *bool                          `json:"microsoft-azure-corevm.isPremiumThirdParty,omitempty"`
 		SupportsHub                *bool                          `json:"microsoft-azure-corevm.supportsHub,omitempty"`
 		SupportsBackup             *bool                          `json:"microsoft-azure-corevm.supportsBackup,omitempty"`
 		FreeTierEligible           *bool                          `json:"microsoft-azure-corevm.freeTierEligible,omitempty"`
-		SupportsSriov              *bool                          `json:"microsoft-azure-corevm.supportsSirov,omitempty"`
+		SupportsSriov              *bool                          `json:"microsoft-azure-corevm.supportsSriov,omitempty"`
 		SupportsAADLogin           *bool                          `json:"microsoft-azure-corevm.supportsAADLogin,omitempty"`
 		DefaultImageSizeGB         string                         `json:"microsoft-azure-corevm.defaultImageSizeGB,omitempty"`
 		VMImages                   map[string]VirtualMachineImage `json:"microsoft-azure-corevm.vmImagesPublicAzure,omitempty"`
@@ -142,12 +143,13 @@ type (
 		Categories                 []string                       `json:"microsoft-azure-corevm.categories,omitempty"`
 		SmallLogo                  string                         `json:"microsoft-azure-corevm.smallLogo,omitempty"`
 		MediumLogo                 string                         `json:"microsoft-azure-corevm.mediumLogo,omitempty"`
+		LargeLogo                  string                         `json:"microsoft-azure-corevm.largeLogo,omitempty"`
 		WideLogo                   string                         `json:"microsoft-azure-corevm.wideLogo,omitempty"`
 		ScreenShots                []string                       `json:"microsoft-azure-corevm.screenshots,omitempty"`
 		Videos                     []string                       `json:"microsoft-azure-corevm.videos,omitempty"`
 		LeadGenerationID           string                         `json:"microsoft-azure-corevm.leadGenerationId,omitempty"`
 		PrivacyURL                 string                         `json:"microsoft-azure-corevm.privacyURL,omitempty"`
-		TermsOfUse                 string                         `json:"microsoft-azure-corevm.termsOfUse,omitempty"`
+		TermsOfUseURL              string                         `json:"microsoft-azure-corevm.termsOfUseURL,omitempty"`
 		MigratedOffer              *bool                          `json:"microsoft-azure-corevm.migratedOffer,omitempty"`
 	}
 
