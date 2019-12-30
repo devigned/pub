@@ -17,6 +17,7 @@ func NewRootCmd(sl service.CommandServicer) (*cobra.Command, error) {
 	cmdFuncs := []func(locator service.CommandServicer) (*cobra.Command, error){
 		newListCommand,
 		newShowCommand,
+		newPutCommand,
 	}
 
 	for _, f := range cmdFuncs {

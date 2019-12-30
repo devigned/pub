@@ -61,6 +61,22 @@ func NewTmpOfferFile(t *testing.T, prefix string) (string, func()) {
 	}
 }
 
+func NewTmpSKUFile(t *testing.T, prefix, Id string) (plan partner.Plan, filename string, deleteFunc func()) {
+	sku := NewMarketplaceVMOffer().Definition.Plans[0]
+	sku.ID = Id
+
+	f, err := ioutil.TempFile("", prefix)
+	require.NoError(t, err)
+	bits, err := json.Marshal(sku)
+	require.NoError(t, err)
+	_, err = f.Write(bits)
+	require.NoError(t, err)
+
+	return sku, f.Name(), func() {
+		_ = os.Remove(f.Name())
+	}
+}
+
 func NewTmpFileFromOffer(t *testing.T, prefix string, offer *partner.Offer) (string, func()) {
 	f, err := ioutil.TempFile("", prefix)
 	require.NoError(t, err)
