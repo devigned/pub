@@ -1,4 +1,4 @@
-package version
+package sku
 
 import (
 	"context"
@@ -13,19 +13,18 @@ import (
 )
 
 type (
-	showVersionsArgs struct {
+	showPlansArgs struct {
 		Publisher string
 		Offer     string
 		SKU       string
-		Version   string
 	}
 )
 
 func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
-	var oArgs showVersionsArgs
+	var oArgs showPlansArgs
 	cmd := &cobra.Command{
 		Use:   "show",
-		Short: "show a version for a given plan",
+		Short: "show a SKU for a given offer",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			client, err := sl.GetCloudPartnerService()
 			if err != nil {
@@ -39,23 +38,17 @@ func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 			})
 
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to list offers: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to get offer: %v", err)
 				return err
 			}
 
-			var versions map[string]partner.VirtualMachineImage
-			for _, plan := range offer.Definition.Plans {
-				if plan.ID == oArgs.SKU {
-					versions = plan.GetVMImages()
-					break
-				}
+			plan := offer.GetPlanByID(oArgs.SKU)
+
+			if plan != nil {
+				return sl.GetPrinter().Print(plan)
 			}
 
-			if version, ok := versions[oArgs.Version]; ok {
-				return sl.GetPrinter().Print(version)
-			}
-
-			return sl.GetPrinter().Print("no version found")
+			return sl.GetPrinter().Print("no SKU found")
 		}),
 	}
 
@@ -71,7 +64,5 @@ func newShowCommand(sl service.CommandServicer) (*cobra.Command, error) {
 		return cmd, err
 	}
 
-	cmd.Flags().StringVar(&oArgs.Version, "version", "", "String that uniquely identifies the version.")
-	err := cmd.MarkFlagRequired("version")
-	return cmd, err
+	return cmd, nil
 }

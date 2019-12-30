@@ -15,7 +15,7 @@ func TestNewRootCmd(t *testing.T) {
 	cmd, err := sku.NewRootCmd(regMock)
 	require.NoError(t, err)
 
-	expected := []string{"list"}
+	expected := []string{"list", "show"}
 	actual := make([]string, len(cmd.Commands()))
 	for i, c := range cmd.Commands() {
 		actual[i] = c.Name()

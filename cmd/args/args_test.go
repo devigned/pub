@@ -25,6 +25,11 @@ func TestBind(t *testing.T) {
 			BindFunc: args.BindOffer,
 			FlagName: "offer",
 		},
+		{
+			Name:     "Sku",
+			BindFunc: args.BindSKU,
+			FlagName: "sku",
+		},
 	}
 
 	for _, tc := range cases {
