@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -48,6 +49,7 @@ func TestPutCommand_FailOnGetOfferError(t *testing.T) {
 	require.NoError(t, err)
 	cmd.SetArgs([]string{"image", "-p", "foo", "-o", "bar", "--sku", "planId_one", "--version", "1234", "--vhd-uri", "uri"})
 	assert.Error(t, cmd.Execute())
+	prtMock.AssertCalled(t, "ErrPrintf", "unable to get offer: %v", []interface{}{boomErr})
 }
 
 func TestPutCommand_FailOnPutOfferError(t *testing.T) {
@@ -69,6 +71,7 @@ func TestPutCommand_FailOnPutOfferError(t *testing.T) {
 	require.NoError(t, err)
 	cmd.SetArgs([]string{"image", "-p", "foo", "-o", "bar", "--sku", "planId_one", "--version", "1234", "--vhd-uri", "uri"})
 	assert.Error(t, cmd.Execute())
+	prtMock.AssertCalled(t, "ErrPrintf", "unable to put offer: %v", []interface{}{boomErr})
 }
 
 func TestPutCommand_Success(t *testing.T) {
@@ -90,4 +93,36 @@ func TestPutCommand_Success(t *testing.T) {
 	cmd.SetArgs([]string{"image", "-p", offer.PublisherID, "-o", offer.ID, "--sku", "planId_one", "--version", "1234", "--vhd-uri", "uri"})
 	assert.NoError(t, cmd.Execute())
 	prtMock.AssertCalled(t, "Print", offer.GetPlanByID("planId_one").GetVMImages())
+}
+
+func TestPutCommand_SuccessCoreVm(t *testing.T) {
+	offer := test.NewMarketplaceCoreVMOffer()
+
+	newVMImage := partner.VirtualMachineImage{
+		MediaName:     "newImageName",
+		ShowInGui:     to.BoolPtr(false),
+		PublishedDate: "1/1/2020",
+		Label:         "label",
+		Description:   "description",
+		OSVHDURL:      "newImageUrl",
+	}
+	updatedOffer := test.NewMarketplaceCoreVMOffer()
+	updatedOffer.Definition.Plans[0].PlanCoreVMDetail.VMImages["2020.01.01"] = newVMImage
+
+	svcMock := new(test.CloudPartnerServiceMock)
+	svcMock.On("GetOffer", mock.Anything, mock.Anything).Return(offer, nil)
+	svcMock.On("PutOffer", mock.Anything, updatedOffer).Return(updatedOffer, nil)
+
+	prtMock := new(test.PrinterMock)
+	prtMock.On("Print", updatedOffer.GetPlanByID("planId_one").GetVMImages()).Return(nil)
+
+	rm := new(test.RegistryMock)
+	rm.On("GetCloudPartnerService").Return(svcMock, nil)
+	rm.On("GetPrinter").Return(prtMock)
+
+	cmd, err := test.QuietCommand(newPutCommand(rm))
+	require.NoError(t, err)
+	cmd.SetArgs([]string{"corevm", "-p", offer.PublisherID, "-o", offer.ID, "-s", "planId_one", "--version", "2020.01.01", "--vhd-uri", "newImageUrl", "--media-name", "newImageName", "--label", "label", "--desc", "description", "--published-date", "1/1/2020"})
+	assert.NoError(t, cmd.Execute())
+	prtMock.AssertCalled(t, "Print", updatedOffer.GetPlanByID("planId_one").GetVMImages())
 }

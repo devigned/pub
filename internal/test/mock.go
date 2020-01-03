@@ -112,7 +112,7 @@ func (cpsm *CloudPartnerServiceMock) ListPublishers(ctx context.Context) ([]part
 	return args.Get(0).([]partner.Publisher), args.Error(1)
 }
 
-// NewMarketplaceVMOffer returns a valid offer for testing
+// NewMarketplaceVMOffer returns a valid offer for testing for virtualmachine scenarios
 func NewMarketplaceVMOffer() *partner.Offer {
 	changed, _ := date.ParseTime(time.RFC3339Nano, "2019-10-30T22:03:51.2917913Z")
 
@@ -203,6 +203,67 @@ func NewMarketplaceVMOffer() *partner.Offer {
 						"AT", "BY", "BE", "BR", "BG", "CA", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU",
 						"IN", "IE", "IT", "KR", "LV", "LI", "LT", "LU", "MT", "MC", "NL", "NZ", "NO", "PL", "PT", "PR",
 						"RO", "RU", "SA", "RS", "SK", "ZA", "ES", "SE", "CH", "TW", "TR", "AE", "GB", "US",
+					},
+				},
+			},
+		},
+		ChangedTime: date.Time{Time: changed},
+		Etag:        "W/\"datetime'2019-10-30T22%3A03%3A51.6562051Z'\"",
+	}
+}
+
+// NewMarketplaceCoreVMOffer returns a valid offer for testing for corevm scenarios
+func NewMarketplaceCoreVMOffer() *partner.Offer {
+	changed, _ := date.ParseTime(time.RFC3339Nano, "2019-10-30T22:03:51.2917913Z")
+
+	return &partner.Offer{
+		Entity: partner.Entity{
+			ID:      "test",
+			Version: 9,
+		},
+		TypeID:                  "microsoft-azure-corevm",
+		PublisherID:             "publisherId",
+		Status:                  "succeeded",
+		PCMigrationStatus:       "none",
+		IsVersionUpgradeRequest: false,
+		Definition: partner.OfferDefinition{
+			DisplayText: "displayText",
+			OfferDetail: &partner.OfferDetail{
+				CoreVMOfferDetail: partner.CoreVMOfferDetail{
+					LegacyOfferID:        "",
+					LegacyPublisherID:    "",
+					Title:                "title",
+					Summary:              "summary",
+					Description:          "description",
+					AllowedSubscriptions: []string{"4145cbfe-cd94-439d-aa3c-1ec6c7e53074"},
+					LeadDestination:      "None",
+				},
+			},
+			Plans: []partner.Plan{
+				{
+					ID: "planId_one",
+					PlanCoreVMDetail: partner.PlanCoreVMDetail{
+						SKUTitle:       "skuTitle",
+						SKUSummary:     "skuSummary",
+						SKULongSummary: "longSummary",
+						VMImages: map[string]partner.VirtualMachineImage{
+							"2018.10.10": {
+								MediaName:     "mediaName",
+								ShowInGui:     to.BoolPtr(false),
+								PublishedDate: "10/10/2018",
+								Label:         "label",
+								Description:   "description",
+								OSVHDURL:      "osVhdUrl_one",
+							},
+							"2018.11.05": {
+								MediaName:     "mediaName",
+								ShowInGui:     to.BoolPtr(false),
+								PublishedDate: "11/05/2018",
+								Label:         "label",
+								Description:   "description",
+								OSVHDURL:      "osVhdUrl_two",
+							},
+						},
 					},
 				},
 			},
