@@ -175,6 +175,8 @@ Usage:
 
 Available Commands:
   list        list all SKUs for a given offer and publisher
+  put         create a SKU
+  show        show a SKU for a given offer
 ...
 ```
 
