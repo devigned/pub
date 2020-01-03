@@ -51,12 +51,10 @@ func newPutImageCmd(sl service.CommandServicer) (*cobra.Command, error) {
 		Use:   "image",
 		Short: "put a vm image version for a given plan",
 		Run: getAndPutMutatedPlan(sl, &oArgs, func(plan *partner.Plan, version string, vm partner.VirtualMachineImage) {
-			if plan.PlanVirtualMachineDetail.VMImages != nil {
-				plan.PlanVirtualMachineDetail.VMImages[version] = vm
-				return
+			if plan.PlanVirtualMachineDetail.VMImages == nil {
+				plan.PlanVirtualMachineDetail.VMImages = make(map[string]partner.VirtualMachineImage)
 			}
-
-			plan.PlanVirtualMachineDetail.VMImages = map[string]partner.VirtualMachineImage{version: vm}
+			plan.PlanVirtualMachineDetail.VMImages[version] = vm
 		}),
 	}
 
@@ -70,12 +68,11 @@ func newPutCoreImageCmd(sl service.CommandServicer) (*cobra.Command, error) {
 		Use:   "corevm",
 		Short: "put a vm image version for a given plan",
 		Run: getAndPutMutatedPlan(sl, &oArgs, func(plan *partner.Plan, version string, vm partner.VirtualMachineImage) {
-			if plan.PlanVirtualMachineDetail.VMImages != nil {
-				plan.PlanCoreVMDetail.VMImages[version] = vm
-				return
+			if plan.PlanCoreVMDetail.VMImages == nil {
+				plan.PlanCoreVMDetail.VMImages = make(map[string]partner.VirtualMachineImage)
 			}
 
-			plan.PlanCoreVMDetail.VMImages = map[string]partner.VirtualMachineImage{version: vm}
+			plan.PlanCoreVMDetail.VMImages[version] = vm
 		}),
 	}
 
@@ -84,6 +81,7 @@ func newPutCoreImageCmd(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd.Flags().StringVar(&oArgs.Image.Description, "desc", "", "(optional) Description of the vm image (only used for CoreVM Type)")
 	oArgs.Image.ShowInGui = to.BoolPtr(false)
 	cmd.Flags().BoolVar(oArgs.Image.ShowInGui, "show", false, "(optional) Show in GUI (only used for CoreVM Type)")
+	cmd.Flags().StringVar(&oArgs.Image.PublishedDate, "published-date", "", "(optional) Date the image was published (only used for CoreVM Type")
 	cmd, err := bindPutArgs(cmd, &oArgs)
 	return cmd, err
 }
