@@ -71,8 +71,7 @@ in pub.
 
 ```bash
 token=$(az account get-access-token --resource https://cloudpartner.azure.com --query "accessToken" -o tsv)
-AZURE_TOKEN=$token
-pub publishers list
+AZURE_TOKEN=$token pub publishers list
 ```
 
 #### Using an AAD Application and Service Principal
