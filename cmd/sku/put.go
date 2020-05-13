@@ -57,9 +57,8 @@ func newPutCommand(sl service.CommandServicer) (*cobra.Command, error) {
 			}
 
 			if offer.GetPlanByID(plan.ID) != nil {
-				err = fmt.Errorf("Plan '%v' already exists for offer '%v'", plan.ID, oArgs.Offer)
-				sl.GetPrinter().ErrPrintf("%v", err)
-				return err
+				warning := fmt.Sprintf("Plan '%v' already exists for offer '%v'", plan.ID, oArgs.Offer)
+				sl.GetPrinter().Print(warning)
 			}
 
 			offer.Definition.Plans = append(offer.Definition.Plans, plan)
