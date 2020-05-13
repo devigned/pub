@@ -307,6 +307,17 @@ func (o *Offer) GetPlanByID(planID string) *Plan {
 	return nil
 }
 
+// SetPlanByID will update the plan in the offer if it exists or append it
+func (o *Offer) SetPlanByID(plan Plan) {
+	for i, p := range o.Definition.Plans {
+		if p.ID == plan.ID {
+			o.Definition.Plans[i] = plan
+			return
+		}
+	}
+	o.Definition.Plans = append(o.Definition.Plans, plan)
+}
+
 // GetVMImages returns a map of VirtualMachineImages by version
 func (p *Plan) GetVMImages() map[string]VirtualMachineImage {
 	switch {
