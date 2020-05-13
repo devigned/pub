@@ -3,7 +3,6 @@ package sku
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 
 	"github.com/spf13/cobra"
@@ -54,11 +53,6 @@ func newPutCommand(sl service.CommandServicer) (*cobra.Command, error) {
 			if err != nil {
 				sl.GetPrinter().ErrPrintf("unable to get offer: %v", err)
 				return err
-			}
-
-			if offer.GetPlanByID(plan.ID) != nil {
-				warning := fmt.Sprintf("Plan '%v' already exists for offer '%v'", plan.ID, oArgs.Offer)
-				sl.GetPrinter().Print(warning)
 			}
 
 			offer.Definition.Plans = append(offer.Definition.Plans, plan)
