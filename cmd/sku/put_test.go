@@ -2,7 +2,6 @@ package sku
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -53,35 +52,6 @@ func TestPutCommand_FailOnGetOfferError(t *testing.T) {
 	cmd.SetArgs([]string{"-p", "foo", "-o", "bar", "-f", skuFileName})
 	assert.Error(t, cmd.Execute())
 	prtMock.AssertCalled(t, "ErrPrintf", "unable to get offer: %v", []interface{}{boomErr})
-}
-
-func TestPutCommand_FailOnPlanAlreadyExistsForOffer(t *testing.T) {
-	offer := test.NewMarketplaceVMOffer()
-	sku := offer.Definition.Plans[0]
-	dupeErr := fmt.Errorf("Plan '%v' already exists for offer '%v'", sku.ID, offer.ID)
-	_, skuFileName, del := test.NewTmpSKUFile(t, "sku", sku.ID)
-	defer del()
-
-	svcMock := new(test.CloudPartnerServiceMock)
-	svcMock.
-		On("GetOffer", mock.Anything, partner.ShowOfferParams{
-			PublisherID: offer.PublisherID,
-			OfferID:     offer.ID,
-		}).
-		Return(offer, nil)
-
-	prtMock := new(test.PrinterMock)
-	prtMock.On("ErrPrintf", "%v", []interface{}{dupeErr}).Return(nil)
-
-	rm := new(test.RegistryMock)
-	rm.On("GetCloudPartnerService").Return(svcMock, nil)
-	rm.On("GetPrinter").Return(prtMock)
-
-	cmd, err := test.QuietCommand(newPutCommand(rm))
-	require.NoError(t, err)
-	cmd.SetArgs([]string{"-p", offer.PublisherID, "-o", offer.ID, "-f", skuFileName})
-	assert.Error(t, cmd.Execute())
-	prtMock.AssertCalled(t, "ErrPrintf", "%v", []interface{}{dupeErr})
 }
 
 func TestPutCommand_FailOnPutOfferError(t *testing.T) {
