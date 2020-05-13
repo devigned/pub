@@ -61,9 +61,10 @@ func NewTmpOfferFile(t *testing.T, prefix string) (string, func()) {
 	}
 }
 
-func NewTmpSKUFile(t *testing.T, prefix, Id string) (plan partner.Plan, filename string, deleteFunc func()) {
+func NewTmpSKUFile(t *testing.T, prefix, Id, summary string) (plan partner.Plan, filename string, deleteFunc func()) {
 	sku := NewMarketplaceVMOffer().Definition.Plans[0]
 	sku.ID = Id
+	sku.PlanVirtualMachineDetail.SKUSummary = summary
 
 	f, err := ioutil.TempFile("", prefix)
 	require.NoError(t, err)

@@ -19,14 +19,14 @@ func TestPutCommand_FailOnInsufficientArgs(t *testing.T) {
 }
 
 func TestPutCommand_FailOnCloudPartnerError(t *testing.T) {
-	_, fName, del := test.NewTmpSKUFile(t, "sku", "sku_one")
+	_, fName, del := test.NewTmpSKUFile(t, "sku", "sku_one", "skuSummary")
 	defer del()
 
 	test.VerifyCloudPartnerServiceCommand(t, newPutCommand, "-p", "foo", "-o", "bar", "-f", fName)
 }
 
 func TestPutCommand_FailOnGetOfferError(t *testing.T) {
-	_, skuFileName, del := test.NewTmpSKUFile(t, "sku", "sku_one")
+	_, skuFileName, del := test.NewTmpSKUFile(t, "sku", "sku_one", "skuSummary")
 	defer del()
 
 	boomErr := errors.New("boom")
@@ -54,9 +54,41 @@ func TestPutCommand_FailOnGetOfferError(t *testing.T) {
 	prtMock.AssertCalled(t, "ErrPrintf", "unable to get offer: %v", []interface{}{boomErr})
 }
 
+func TestPutCommand_ReplacePlanIfAlreadyExistsForOffer(t *testing.T) {
+	plan, skuFileName, del := test.NewTmpSKUFile(t, "sku", "planId_one", "New summary")
+	defer del()
+
+	offer := test.NewMarketplaceVMOffer()
+	assert.Equal(t, 1, len(offer.Definition.Plans))
+	assert.Equal(t, "planId_one", offer.Definition.Plans[0].ID)
+
+	expectedOffer := test.NewMarketplaceVMOffer()
+	expectedOffer.Definition.Plans = []partner.Plan{plan}
+	assert.Equal(t, 1, len(expectedOffer.Definition.Plans))
+	assert.Equal(t, "planId_one", expectedOffer.Definition.Plans[0].ID)
+	assert.Equal(t, "New summary", expectedOffer.Definition.Plans[0].PlanVirtualMachineDetail.SKUSummary)
+
+	svcMock := new(test.CloudPartnerServiceMock)
+	svcMock.On("GetOffer", mock.Anything, mock.Anything).Return(offer, nil)
+	svcMock.On("PutOffer", mock.Anything, expectedOffer).Return(expectedOffer, nil)
+
+	prtMock := new(test.PrinterMock)
+	prtMock.On("Print", expectedOffer).Return(nil)
+
+	rm := new(test.RegistryMock)
+	rm.On("GetCloudPartnerService").Return(svcMock, nil)
+	rm.On("GetPrinter").Return(prtMock)
+
+	cmd, err := test.QuietCommand(newPutCommand(rm))
+	require.NoError(t, err)
+	cmd.SetArgs([]string{"-p", offer.PublisherID, "-o", offer.ID, "-f", skuFileName})
+	assert.NoError(t, cmd.Execute())
+	prtMock.AssertCalled(t, "Print", expectedOffer)
+}
+
 func TestPutCommand_FailOnPutOfferError(t *testing.T) {
 	offer := test.NewMarketplaceVMOffer()
-	_, skuFileName, del := test.NewTmpSKUFile(t, "sku", "new_sku")
+	_, skuFileName, del := test.NewTmpSKUFile(t, "sku", "new_sku", "skuSummary")
 	defer del()
 
 	boomErr := errors.New("boom")
@@ -89,7 +121,7 @@ func TestPutCommand_FailOnPutOfferError(t *testing.T) {
 }
 
 func TestPutCommand_SuccessPutFirstPlan(t *testing.T) {
-	plan, skuFileName, del := test.NewTmpSKUFile(t, "sku", "first_sku")
+	plan, skuFileName, del := test.NewTmpSKUFile(t, "sku", "first_sku", "skuSummary")
 	defer del()
 
 	offer := test.NewMarketplaceVMOffer()
@@ -122,7 +154,7 @@ func TestPutCommand_SuccessPutFirstPlan(t *testing.T) {
 }
 
 func TestPutCommand_SuccessPutAdditionalPlan(t *testing.T) {
-	plan, skuFileName, del := test.NewTmpSKUFile(t, "sku", "second_sku")
+	plan, skuFileName, del := test.NewTmpSKUFile(t, "sku", "second_sku", "skuSummary")
 	defer del()
 
 	offer := test.NewMarketplaceVMOffer()

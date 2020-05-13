@@ -55,7 +55,7 @@ func newPutCommand(sl service.CommandServicer) (*cobra.Command, error) {
 				return err
 			}
 
-			offer.Definition.Plans = append(offer.Definition.Plans, plan)
+			offer.SetPlanByID(plan)
 
 			updatedOffer, err := client.PutOffer(ctx, offer)
 			if err != nil {
