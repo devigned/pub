@@ -364,7 +364,7 @@ func (c *Client) PutOffer(ctx context.Context, offer *Offer) (*Offer, error) {
 	}
 
 	path := fmt.Sprintf("api/publishers/%s/offers/%s?api-version=%s", offer.PublisherID, offer.ID, c.APIVersion)
-	res, err := c.execute(ctx, http.MethodPut, path, bytes.NewReader(offerJSON), IfMatches(offer.Etag))
+	res, err := c.execute(ctx, http.MethodPut, path, bytes.NewReader(offerJSON), MatchesAll())
 	defer closeResponse(ctx, res)
 
 	if err != nil {
@@ -640,6 +640,17 @@ func IfMatches(etag string) MiddlewareFunc {
 				req.Header.Add("If-Match", etag)
 			}
 
+			return next(ctx, req)
+		}
+	}
+}
+
+// MatchesAll adds an If-Match=* header to the request.
+// More details on why can be found in https://github.com/devigned/pub/issues/22
+func MatchesAll() MiddlewareFunc {
+	return func(next RestHandler) RestHandler {
+		return func(ctx context.Context, req *http.Request) (*http.Response, error) {
+			req.Header.Add("If-Match", "*")
 			return next(ctx, req)
 		}
 	}
