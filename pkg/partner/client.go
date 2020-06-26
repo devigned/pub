@@ -605,7 +605,7 @@ func (c *Client) getHTTPClient() *http.Client {
 	}
 
 	return &http.Client{
-		Timeout: 60 * time.Second,
+		Timeout: 5 * 60 * time.Second,
 	}
 }
 
