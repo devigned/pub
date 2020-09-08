@@ -40,32 +40,33 @@ type (
 
 	// MarketplaceDetail are the marketing and contact information for a marketplace offering
 	MarketplaceDetail struct {
-		Title                       string   `json:"microsoft-azure-marketplace.title,omitempty"`
-		Summary                     string   `json:"microsoft-azure-marketplace.summary,omitempty"`
-		LongSummary                 string   `json:"microsoft-azure-marketplace.longSummary,omitempty"`
-		Description                 string   `json:"microsoft-azure-marketplace.description,omitempty"`
-		CSPOfferOptIn               *bool    `json:"microsoft-azure-marketplace.cspOfferOptIn,omitempty"`
-		OfferMarketingURLIdentifier string   `json:"microsoft-azure-marketplace.offerMarketingUrlIdentifier,omitempty"`
-		AllowedSubscriptions        []string `json:"microsoft-azure-marketplace.allowedSubscriptions,omitempty"`
-		UsefulLinks                 []string `json:"microsoft-azure-marketplace.usefulLinks,omitempty"`
-		Categories                  []string `json:"microsoft-azure-marketplace.categories,omitempty"`
-		SmallLogo                   string   `json:"microsoft-azure-marketplace.smallLogo,omitempty"`
-		MediumLogo                  string   `json:"microsoft-azure-marketplace.mediumLogo,omitempty"`
-		WideLogo                    string   `json:"microsoft-azure-marketplace.wideLogo,omitempty"`
-		ScreenShots                 []string `json:"microsoft-azure-marketplace.screenshots,omitempty"`
-		Videos                      []string `json:"microsoft-azure-marketplace.videos,omitempty"`
-		LeadDestination             string   `json:"microsoft-azure-marketplace.leadDestination,omitempty"`
-		PrivacyURL                  string   `json:"microsoft-azure-marketplace.privacyURL,omitempty"`
-		UseEnterpriseContract       *bool    `json:"microsoft-azure-marketplace.useEnterpriseContract,omitempty"`
-		TermsOfUse                  string   `json:"microsoft-azure-marketplace.termsOfUse,omitempty"`
-		EngineeringContactName      string   `json:"microsoft-azure-marketplace.engineeringContactName,omitempty"`
-		EngineeringContactEmail     string   `json:"microsoft-azure-marketplace.engineeringContactEmail,omitempty"`
-		EngineeringContactPhone     string   `json:"microsoft-azure-marketplace.engineeringContactPhone,omitempty"`
-		SupportContactName          string   `json:"microsoft-azure-marketplace.supportContactName,omitempty"`
-		SupportContactEmail         string   `json:"microsoft-azure-marketplace.supportContactEmail,omitempty"`
-		SupportContactPhone         string   `json:"microsoft-azure-marketplace.supportContactPhone,omitempty"`
-		PublicAzureSupportURL       string   `json:"microsoft-azure-marketplace.publicAzureSupportUrl,omitempty"`
-		FairfaxSupportURL           string   `json:"microsoft-azure-marketplace.fairfaxSupportUrl,omitempty"`
+		Title                       string                   `json:"microsoft-azure-marketplace.title,omitempty"`
+		Summary                     string                   `json:"microsoft-azure-marketplace.summary,omitempty"`
+		LongSummary                 string                   `json:"microsoft-azure-marketplace.longSummary,omitempty"`
+		Description                 string                   `json:"microsoft-azure-marketplace.description,omitempty"`
+		CSPOfferOptIn               *bool                    `json:"microsoft-azure-marketplace.cspOfferOptIn,omitempty"`
+		OfferMarketingURLIdentifier string                   `json:"microsoft-azure-marketplace.offerMarketingUrlIdentifier,omitempty"`
+		AllowedSubscriptions        []string                 `json:"microsoft-azure-marketplace.allowedSubscriptions,omitempty"`
+		UsefulLinks                 []string                 `json:"microsoft-azure-marketplace.usefulLinks,omitempty"`
+		Categories                  []string                 `json:"microsoft-azure-marketplace.categories,omitempty"`
+		CategoryMap                 []map[string]interface{} `json:"microsoft-azure-marketplace.categoryMap,omitempty"`
+		SmallLogo                   string                   `json:"microsoft-azure-marketplace.smallLogo,omitempty"`
+		MediumLogo                  string                   `json:"microsoft-azure-marketplace.mediumLogo,omitempty"`
+		WideLogo                    string                   `json:"microsoft-azure-marketplace.wideLogo,omitempty"`
+		ScreenShots                 []string                 `json:"microsoft-azure-marketplace.screenshots,omitempty"`
+		Videos                      []string                 `json:"microsoft-azure-marketplace.videos,omitempty"`
+		LeadDestination             string                   `json:"microsoft-azure-marketplace.leadDestination,omitempty"`
+		PrivacyURL                  string                   `json:"microsoft-azure-marketplace.privacyURL,omitempty"`
+		UseEnterpriseContract       *bool                    `json:"microsoft-azure-marketplace.useEnterpriseContract,omitempty"`
+		TermsOfUse                  string                   `json:"microsoft-azure-marketplace.termsOfUse,omitempty"`
+		EngineeringContactName      string                   `json:"microsoft-azure-marketplace.engineeringContactName,omitempty"`
+		EngineeringContactEmail     string                   `json:"microsoft-azure-marketplace.engineeringContactEmail,omitempty"`
+		EngineeringContactPhone     string                   `json:"microsoft-azure-marketplace.engineeringContactPhone,omitempty"`
+		SupportContactName          string                   `json:"microsoft-azure-marketplace.supportContactName,omitempty"`
+		SupportContactEmail         string                   `json:"microsoft-azure-marketplace.supportContactEmail,omitempty"`
+		SupportContactPhone         string                   `json:"microsoft-azure-marketplace.supportContactPhone,omitempty"`
+		PublicAzureSupportURL       string                   `json:"microsoft-azure-marketplace.publicAzureSupportUrl,omitempty"`
+		FairfaxSupportURL           string                   `json:"microsoft-azure-marketplace.fairfaxSupportUrl,omitempty"`
 	}
 
 	// VirtualMachinePricing is the marketplace VM pricing details
@@ -141,6 +142,7 @@ type (
 		UsefulLinksFairfax         []string                       `json:"microsoft-azure-corevm.usefulLinksFairfax,omitempty"`
 		UsefulLinksMooncake        []string                       `json:"microsoft-azure-corevm.usefulLinksMooncake,omitempty"`
 		Categories                 []string                       `json:"microsoft-azure-corevm.categories,omitempty"`
+		CategoryMap                []map[string]interface{}       `json:"microsoft-azure-corevm.categoryMap,omitempty"`
 		SmallLogo                  string                         `json:"microsoft-azure-corevm.smallLogo,omitempty"`
 		MediumLogo                 string                         `json:"microsoft-azure-corevm.mediumLogo,omitempty"`
 		LargeLogo                  string                         `json:"microsoft-azure-corevm.largeLogo,omitempty"`

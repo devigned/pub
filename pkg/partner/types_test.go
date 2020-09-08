@@ -36,6 +36,14 @@ const (
       "microsoft-azure-marketplace.categories": [
         "devService"
       ],
+      "microsoft-azure-marketplace.categoryMap": [
+          {
+              "categoryL1": "compute",
+              "categoryL2-compute": [
+                  "operating-systems"
+              ]
+          }
+      ],
       "microsoft-azure-marketplace.smallLogo": "smallLogo",
       "microsoft-azure-marketplace.mediumLogo": "mediumLogo",
       "microsoft-azure-marketplace.wideLogo": "wideLogo",
@@ -271,23 +279,29 @@ func TestOffer_JSON(t *testing.T) {
 					AllowedSubscriptions:        []string{"4145cbfe-cd94-439d-aa3c-1ec6c7e53074"},
 					UsefulLinks:                 nil,
 					Categories:                  []string{"devService"},
-					SmallLogo:                   "smallLogo",
-					MediumLogo:                  "mediumLogo",
-					WideLogo:                    "wideLogo",
-					ScreenShots:                 nil,
-					Videos:                      nil,
-					LeadDestination:             "None",
-					PrivacyURL:                  "privacyURL",
-					UseEnterpriseContract:       to.BoolPtr(false),
-					TermsOfUse:                  "termsOfUse",
-					EngineeringContactName:      "engineeringContactName",
-					EngineeringContactEmail:     "engineeringContactEmail",
-					EngineeringContactPhone:     "engineeringContactPhone",
-					SupportContactName:          "supportContactName",
-					SupportContactEmail:         "supportContactEmail",
-					SupportContactPhone:         "supportContactPhone",
-					PublicAzureSupportURL:       "publicAzureSupportUrl",
-					FairfaxSupportURL:           "fairfaxSupportUrl",
+					CategoryMap: []map[string]interface{}{
+						{
+							"categoryL1":         "compute",
+							"categoryL2-compute": []interface{}{"operating-systems"},
+						},
+					},
+					SmallLogo:               "smallLogo",
+					MediumLogo:              "mediumLogo",
+					WideLogo:                "wideLogo",
+					ScreenShots:             nil,
+					Videos:                  nil,
+					LeadDestination:         "None",
+					PrivacyURL:              "privacyURL",
+					UseEnterpriseContract:   to.BoolPtr(false),
+					TermsOfUse:              "termsOfUse",
+					EngineeringContactName:  "engineeringContactName",
+					EngineeringContactEmail: "engineeringContactEmail",
+					EngineeringContactPhone: "engineeringContactPhone",
+					SupportContactName:      "supportContactName",
+					SupportContactEmail:     "supportContactEmail",
+					SupportContactPhone:     "supportContactPhone",
+					PublicAzureSupportURL:   "publicAzureSupportUrl",
+					FairfaxSupportURL:       "fairfaxSupportUrl",
 				},
 			},
 			Plans: []partner.Plan{
