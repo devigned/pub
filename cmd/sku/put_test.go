@@ -54,7 +54,34 @@ func TestPutCommand_FailOnGetOfferError(t *testing.T) {
 	prtMock.AssertCalled(t, "ErrPrintf", "unable to get offer: %v", []interface{}{boomErr})
 }
 
-func TestPutCommand_ReplacePlanIfAlreadyExistsForOffer(t *testing.T) {
+func TestPutCommand_WarnIfPlanAlreadyExistsForOffer(t *testing.T) {
+	_, skuFileName, del := test.NewTmpSKUFile(t, "sku", "planId_one", "New summary")
+	defer del()
+
+	offer := test.NewMarketplaceVMOffer()
+	assert.Equal(t, 1, len(offer.Definition.Plans))
+	assert.Equal(t, "planId_one", offer.Definition.Plans[0].ID)
+
+	svcMock := new(test.CloudPartnerServiceMock)
+	svcMock.On("GetOffer", mock.Anything, mock.Anything).Return(offer, nil)
+
+	warning := "Plan 'planId_one' already exists for offer 'test'"
+
+	prtMock := new(test.PrinterMock)
+	prtMock.On("Print", warning).Return(nil)
+
+	rm := new(test.RegistryMock)
+	rm.On("GetCloudPartnerService").Return(svcMock, nil)
+	rm.On("GetPrinter").Return(prtMock)
+
+	cmd, err := test.QuietCommand(newPutCommand(rm))
+	require.NoError(t, err)
+	cmd.SetArgs([]string{"-p", offer.PublisherID, "-o", offer.ID, "-f", skuFileName})
+	assert.NoError(t, cmd.Execute())
+	prtMock.AssertCalled(t, "Print", warning)
+}
+
+func TestPutCommand_ForceReplacePlanIfAlreadyExistsForOffer(t *testing.T) {
 	plan, skuFileName, del := test.NewTmpSKUFile(t, "sku", "planId_one", "New summary")
 	defer del()
 
@@ -81,7 +108,7 @@ func TestPutCommand_ReplacePlanIfAlreadyExistsForOffer(t *testing.T) {
 
 	cmd, err := test.QuietCommand(newPutCommand(rm))
 	require.NoError(t, err)
-	cmd.SetArgs([]string{"-p", offer.PublisherID, "-o", offer.ID, "-f", skuFileName})
+	cmd.SetArgs([]string{"--force", "-p", offer.PublisherID, "-o", offer.ID, "-f", skuFileName})
 	assert.NoError(t, cmd.Execute())
 	prtMock.AssertCalled(t, "Print", expectedOffer)
 }
