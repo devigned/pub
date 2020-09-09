@@ -3,6 +3,7 @@ package sku
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 
 	"github.com/spf13/cobra"
@@ -18,6 +19,7 @@ type (
 		Publisher   string
 		Offer       string
 		SkuFilePath string
+		Force       bool
 	}
 )
 
@@ -55,6 +57,11 @@ func newPutCommand(sl service.CommandServicer) (*cobra.Command, error) {
 				return err
 			}
 
+			if !oArgs.Force && offer.GetPlanByID(plan.ID) != nil {
+				warning := fmt.Sprintf("Plan '%v' already exists for offer '%v'", plan.ID, oArgs.Offer)
+				return sl.GetPrinter().Print(warning)
+			}
+
 			offer.SetPlanByID(plan)
 
 			updatedOffer, err := client.PutOffer(ctx, offer)
@@ -79,6 +86,8 @@ func newPutCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	if err := cmd.MarkFlagRequired("sku-file"); err != nil {
 		return cmd, err
 	}
+
+	cmd.Flags().BoolVarP(&oArgs.Force, "force", "", false, "Overwrite existing SKU if a SKU with the same ID already exists")
 
 	return cmd, nil
 }
