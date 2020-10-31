@@ -69,10 +69,17 @@ type (
 		FairfaxSupportURL           string                   `json:"microsoft-azure-marketplace.fairfaxSupportUrl,omitempty"`
 	}
 
+	// CoreMultiplier specifies one price in USD for their SKU and all other prices are automatically generated
+	CoreMultiplier struct {
+		Currency string   `json:"currency,omitempty"`
+		Single   *float32 `json:"single,omitempty"`
+	}
+
 	// VirtualMachinePricing is the marketplace VM pricing details
 	VirtualMachinePricing struct {
-		IsBringYourOwnLicense     *bool `json:"isByol,omitempty"`
-		FreeTrialDurationInMonths *int  `json:"freeTrialDurationInMonths,omitempty"`
+		IsBringYourOwnLicense     *bool           `json:"isByol,omitempty"`
+		FreeTrialDurationInMonths *int            `json:"freeTrialDurationInMonths,omitempty"`
+		CoreMultiplier            *CoreMultiplier `json:"coreMultiplier,omitempty"`
 	}
 
 	// PlanVirtualMachineDetail contains the details for virtual machine SKUs
@@ -88,6 +95,7 @@ type (
 		OperatingSystemFamily          string                         `json:"microsoft-azure-virtualmachines.operatingSystemFamily,omitempty"`
 		OSType                         string                         `json:"microsoft-azure-virtualmachines.osType,omitempty"`
 		OperatingSystem                string                         `json:"microsoft-azure-virtualmachines.operatingSystem,omitempty"`
+		OperationSystem                string                         `json:"microsoft-azure-virtualmachines.operationSystem,omitempty"`
 		RecommendedVirtualMachineSizes []string                       `json:"microsoft-azure-virtualmachines.recommendedVMSizes,omitempty"`
 		VMImages                       map[string]VirtualMachineImage `json:"microsoft-azure-virtualmachines.vmImages,omitempty"`
 	}

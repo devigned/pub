@@ -217,13 +217,22 @@ const (
         "microsoft-azure-virtualmachines.supportsAcceleratedNetworking": false,
         "virtualMachinePricing": {
           "isByol": true,
-          "freeTrialDurationInMonths": 0
+          "freeTrialDurationInMonths": 0,
+          "coreMultiplier": {
+		     "currency": "USD",
+		     "single": 0.0
+		   }
         },
         "virtualMachinePricingV2": {
           "isByol": true,
-          "freeTrialDurationInMonths": 0
+          "freeTrialDurationInMonths": 0,
+          "coreMultiplier": {
+			"currency": "USD",
+			"single": 0.0
+		  }
         },
         "microsoft-azure-virtualmachines.operatingSystemFamily": "Linux",
+        "microsoft-azure-virtualmachines.operationSystem": "Bionic",
         "microsoft-azure-virtualmachines.osType": "Ubuntu",
         "microsoft-azure-virtualmachines.recommendedVMSizes": [
           "ds2-standard-v2",
@@ -317,14 +326,23 @@ func TestOffer_JSON(t *testing.T) {
 						VirtualMachinePricing: &partner.VirtualMachinePricing{
 							IsBringYourOwnLicense:     to.BoolPtr(true),
 							FreeTrialDurationInMonths: to.IntPtr(0),
+							CoreMultiplier: &partner.CoreMultiplier{
+								Currency: "USD",
+								Single:   to.Float32Ptr(0.0),
+							},
 						},
 						VirtualMachinePricingV2: &partner.VirtualMachinePricing{
 							IsBringYourOwnLicense:     to.BoolPtr(true),
 							FreeTrialDurationInMonths: to.IntPtr(0),
+							CoreMultiplier: &partner.CoreMultiplier{
+								Currency: "USD",
+								Single:   to.Float32Ptr(0.0),
+							},
 						},
 						OperatingSystemFamily: "Linux",
 						OSType:                "Ubuntu",
 						OperatingSystem:       "",
+						OperationSystem:       "Bionic",
 						RecommendedVirtualMachineSizes: []string{
 							"ds2-standard-v2",
 							"d2-standard-v3",
@@ -357,5 +375,5 @@ func TestOffer_JSON(t *testing.T) {
 		Etag:        "W/\"datetime'2019-10-30T22%3A03%3A51.6562051Z'\"",
 	}
 
-	assert.Equal(t, actualOffer, expectedOffer)
+	assert.Equal(t, expectedOffer, actualOffer)
 }
