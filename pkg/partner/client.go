@@ -172,7 +172,6 @@ func New(apiVersion string, opts ...ClientOption) (*Client, error) {
 			if err != nil {
 				return nil, err
 			}
-			settings.Values[auth.Resource] = CloudPartnerResource
 
 			a, err = settings.GetAuthorizer()
 			if err != nil {
