@@ -136,6 +136,7 @@ var (
 
 			res, err := next(ctx, req)
 			if err != nil {
+				printErrLine("+%v\n", err)
 				return res, err
 			}
 
