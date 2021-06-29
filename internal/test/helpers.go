@@ -1,7 +1,6 @@
 package test
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -52,7 +51,7 @@ func VerifyCloudPartnerServiceCommand(t *testing.T, cmdFactory func(service.Comm
 func NewTmpOfferFile(t *testing.T, prefix string) (string, func()) {
 	f, err := ioutil.TempFile("", prefix)
 	require.NoError(t, err)
-	bits, err := json.Marshal(NewMarketplaceVMOffer())
+	bits, err := partner.JSONMarshalWithNoHTMLEscaping(NewMarketplaceVMOffer())
 	require.NoError(t, err)
 	_, err = f.Write(bits)
 	require.NoError(t, err)
@@ -68,7 +67,7 @@ func NewTmpSKUFile(t *testing.T, prefix, Id, summary string) (plan partner.Plan,
 
 	f, err := ioutil.TempFile("", prefix)
 	require.NoError(t, err)
-	bits, err := json.Marshal(sku)
+	bits, err := partner.JSONMarshalWithNoHTMLEscaping(sku)
 	require.NoError(t, err)
 	_, err = f.Write(bits)
 	require.NoError(t, err)
@@ -81,7 +80,7 @@ func NewTmpSKUFile(t *testing.T, prefix, Id, summary string) (plan partner.Plan,
 func NewTmpFileFromOffer(t *testing.T, prefix string, offer *partner.Offer) (string, func()) {
 	f, err := ioutil.TempFile("", prefix)
 	require.NoError(t, err)
-	bits, err := json.Marshal(offer)
+	bits, err := partner.JSONMarshalWithNoHTMLEscaping(offer)
 	require.NoError(t, err)
 	_, err = f.Write(bits)
 	require.NoError(t, err)

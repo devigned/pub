@@ -297,7 +297,7 @@ func (c *Client) ListOperations(ctx context.Context, params ListOperationsParams
 // GoLiveWithOffer opens a published offer to the world, not just the preview subscriptions
 func (c *Client) GoLiveWithOffer(ctx context.Context, params GoLiveParams) (string, error) {
 	path := fmt.Sprintf("api/publishers/%s/offers/%s/golive?api-version=%s", params.PublisherID, params.OfferID, c.APIVersion)
-	bodyJSON, err := json.Marshal(Publish{
+	bodyJSON, err := JSONMarshalWithNoHTMLEscaping(Publish{
 		Metadata: PublishMetadata{
 			NotificationEmails: params.NotificationEmails,
 		},
@@ -326,7 +326,7 @@ func (c *Client) GoLiveWithOffer(ctx context.Context, params GoLiveParams) (stri
 // PublishOffer starts the publish process for the offer. This is a long running operation, so the method returns a
 // uri which can be used to query the status of the operation.
 func (c *Client) PublishOffer(ctx context.Context, publishParams PublishOfferParams) (string, error) {
-	pubJSON, err := json.Marshal(Publish{
+	pubJSON, err := JSONMarshalWithNoHTMLEscaping(Publish{
 		Metadata: PublishMetadata{
 			NotificationEmails: publishParams.NotificationEmails,
 		},
@@ -359,7 +359,7 @@ func (c *Client) PublishOffer(ctx context.Context, publishParams PublishOfferPar
 
 // PutOffer will PUT an offer to the API and return the offer
 func (c *Client) PutOffer(ctx context.Context, offer *Offer) (*Offer, error) {
-	offerJSON, err := json.Marshal(offer)
+	offerJSON, err := JSONMarshalWithNoHTMLEscaping(offer)
 	if err != nil {
 		return nil, err
 	}
@@ -655,4 +655,13 @@ func MatchesAll() MiddlewareFunc {
 			return next(ctx, req)
 		}
 	}
+}
+
+// JSONMarshalWithNoHTMLEscaping will marshal an object to json, but not escape the HTML
+func JSONMarshalWithNoHTMLEscaping(t interface{}) ([]byte, error) {
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	err := encoder.Encode(t)
+	return buffer.Bytes(), err
 }

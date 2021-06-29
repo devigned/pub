@@ -1,10 +1,11 @@
 package format
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/devigned/pub/pkg/partner"
 )
 
 type (
@@ -53,7 +54,7 @@ func (StdPrinter) ErrPrintf(format string, args ...interface{}) {
 }
 
 func printJSON(writer io.Writer, obj interface{}) error {
-	bits, err := json.Marshal(obj)
+	bits, err := partner.JSONMarshalWithNoHTMLEscaping(obj)
 	if err != nil {
 		return err
 	}
