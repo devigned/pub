@@ -1,7 +1,13 @@
 package partner
 
 import (
+	"encoding/json"
+	"fmt"
+	"reflect"
+	"strings"
+
 	"github.com/Azure/go-autorest/autorest/date"
+	"github.com/pkg/errors"
 )
 
 type (
@@ -165,8 +171,9 @@ type (
 
 	// Plan maps to a SKU in the marketplace. In the API it is referred to as a Plan rather than SKU as it is in the UI.
 	Plan struct {
-		ID      string   `json:"planId,omitempty"`
-		Regions []string `json:"regions,omitempty"`
+		ID          string                      `json:"planId,omitempty"`
+		Regions     []string                    `json:"regions,omitempty"`
+		ExtraFields map[string]*json.RawMessage `json:"-"`
 		PlanVirtualMachineDetail
 		PlanCoreVMDetail
 	}
@@ -327,6 +334,51 @@ func (o *Offer) SetPlanByID(plan Plan) {
 	}
 	o.Definition.Plans = append(o.Definition.Plans, plan)
 }
+
+// UnmarshalJSON unmarshals a plan object from raw JSON bytes.
+func (p *Plan) UnmarshalJSON(data []byte) error {
+	m := make(map[string]*json.RawMessage)
+	if err := json.Unmarshal(data, &m); err != nil {
+		return errors.Wrap(err, "could not unmarshal plan object")
+	}
+
+	t := reflect.TypeOf(p).Elem()
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		tag := field.Tag
+		val, ok := tag.Lookup("json")
+		if !ok {
+			continue
+		}
+		parts := strings.Split(val, ",")
+		jsonField := parts[0]
+		if jsonValue, ok := m[jsonField]; ok {
+			// found field, need to unmarshal substruct
+			fmt.Println(string(*jsonValue))
+			if err := json.Unmarshal(*jsonValue, &field); err != nil {
+				return errors.Wrap(err, "could not unmarshal JSON field")
+			}
+			delete(m, jsonField)
+		}
+	}
+	// add to plan map of extra values
+	p.ExtraFields = m
+
+	// field, ok := reflect.TypeOf(user).Elem().FieldByName("Name")
+	// if !ok {
+	// 	panic("Field not found")
+	// }
+	// if getStructTag(field) == "" {
+	// 	panic("no struct tag found")
+	// }
+	// return json.Unmarshal(something)
+	return nil
+}
+
+// // MarshalJSON serializes a plan into its JSON byte representation.
+// func (p *Plan) MarshalJSON() ([]byte, error) {
+// 	return json.Marshal(p)
+// }
 
 // GetVMImages returns a map of VirtualMachineImages by version
 func (p *Plan) GetVMImages() map[string]VirtualMachineImage {
