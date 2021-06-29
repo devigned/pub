@@ -343,19 +343,22 @@ func (p *Plan) UnmarshalJSON(data []byte) error {
 	}
 
 	t := reflect.TypeOf(p).Elem()
+	val := reflect.ValueOf(p).Elem()
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		tag := field.Tag
-		val, ok := tag.Lookup("json")
+		tagVal, ok := tag.Lookup("json")
 		if !ok {
 			continue
 		}
-		parts := strings.Split(val, ",")
+		parts := strings.Split(tagVal, ",")
 		jsonField := parts[0]
 		if jsonValue, ok := m[jsonField]; ok {
 			// found field, need to unmarshal substruct
 			fmt.Println(string(*jsonValue))
-			if err := json.Unmarshal(*jsonValue, &field); err != nil {
+			f := val.Field(i)
+			iface := f.Addr().Interface()
+			if err := json.Unmarshal(*jsonValue, iface); err != nil {
 				return errors.Wrap(err, "could not unmarshal JSON field")
 			}
 			delete(m, jsonField)
@@ -364,21 +367,45 @@ func (p *Plan) UnmarshalJSON(data []byte) error {
 	// add to plan map of extra values
 	p.ExtraFields = m
 
-	// field, ok := reflect.TypeOf(user).Elem().FieldByName("Name")
-	// if !ok {
-	// 	panic("Field not found")
-	// }
-	// if getStructTag(field) == "" {
-	// 	panic("no struct tag found")
-	// }
-	// return json.Unmarshal(something)
 	return nil
 }
 
-// // MarshalJSON serializes a plan into its JSON byte representation.
-// func (p *Plan) MarshalJSON() ([]byte, error) {
-// 	return json.Marshal(p)
-// }
+// MarshalJSON serializes a plan into its JSON byte representation.
+func (p *Plan) MarshalJSON() ([]byte, error) {
+	m := make(map[string]*json.RawMessage)
+
+	// TODO: remove logo fields if they have a processed URL
+
+	t := reflect.TypeOf(p).Elem()
+	val := reflect.ValueOf(p).Elem()
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		tag := field.Tag
+		tagVal, ok := tag.Lookup("json")
+		if !ok {
+			continue
+		}
+
+		parts := strings.Split(tagVal, ",")
+		jsonField := parts[0]
+		iface := val.Field(i).Addr().Interface()
+		bits, err := json.Marshal(iface)
+
+		if err != nil {
+			return nil, errors.Wrap(err, "could not marshal JSON")
+		}
+
+		msg := json.RawMessage(bits)
+		m[jsonField] = &msg
+	}
+
+	// add in the extra fields
+	for k, v := range p.ExtraFields {
+		m[k] = v
+	}
+
+	return json.Marshal(m)
+}
 
 // GetVMImages returns a map of VirtualMachineImages by version
 func (p *Plan) GetVMImages() map[string]VirtualMachineImage {
