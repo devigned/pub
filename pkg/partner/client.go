@@ -132,7 +132,7 @@ var (
 			if err != nil {
 				printErrLine("+%v\n", err)
 			}
-			printErrLine(string(requestDump))
+			_, _ = fmt.Fprintln(os.Stderr, string(requestDump))
 
 			res, err := next(ctx, req)
 			if err != nil {
@@ -144,7 +144,7 @@ var (
 			if err != nil {
 				printErrLine("+%v\n", err)
 			}
-			printErrLine(string(resDump))
+			_, _ = fmt.Fprintln(os.Stderr, string(resDump))
 
 			return res, err
 		}
