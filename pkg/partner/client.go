@@ -13,9 +13,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/devigned/tab"
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 const (
@@ -34,6 +37,7 @@ type (
 		APIVersion string
 		Host       string
 		mwStack    []MiddlewareFunc
+		MaxRetries int
 	}
 
 	// ClientOption is a variadic optional configuration func
@@ -156,6 +160,7 @@ func New(apiVersion string, opts ...ClientOption) (*Client, error) {
 	c := &Client{
 		Host:       DefaultHost,
 		APIVersion: apiVersion,
+		MaxRetries: 3,
 	}
 
 	for _, opt := range opts {
@@ -562,17 +567,24 @@ func (c *Client) execute(ctx context.Context, method string, entityPath string, 
 		return nil, err
 	}
 
+	// make the final retryable request
 	final := func(_ RestHandler) RestHandler {
 		return func(reqCtx context.Context, request *http.Request) (*http.Response, error) {
-			client := c.getHTTPClient()
-			request = request.WithContext(reqCtx)
+			client := retryablehttp.NewClient()
+			client.RetryMax = c.MaxRetries
 			request.Header.Set("Content-Type", "application/json")
 			request, err := autorest.CreatePreparer(c.Authorizer.WithAuthorization()).Prepare(request)
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "failed preparing the request with autorest preparer")
 			}
 
-			return client.Do(request)
+			retryableRequest, err := retryablehttp.FromRequest(request)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to build retryable request from request")
+			}
+
+			retryableRequest.WithContext(reqCtx)
+			return client.Do(retryableRequest)
 		}
 	}
 
