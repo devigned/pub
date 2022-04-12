@@ -84,20 +84,21 @@ type (
 
 	// PlanVirtualMachineDetail contains the details for virtual machine SKUs
 	PlanVirtualMachineDetail struct {
-		SKUTitle                       string                         `json:"microsoft-azure-virtualmachines.skuTitle,omitempty"`
-		SKUSummary                     string                         `json:"microsoft-azure-virtualmachines.skuSummary,omitempty"`
-		SKUDescription                 string                         `json:"microsoft-azure-virtualmachines.skuDescription,omitempty"`
-		HideSKUForSolutionTemplate     *bool                          `json:"microsoft-azure-virtualmachines.hideSKUForSolutionTemplate,omitempty"`
-		CloudAvailability              []string                       `json:"microsoft-azure-virtualmachines.cloudAvailability,omitempty"`
-		SupportsAcceleratedNetworking  *bool                          `json:"microsoft-azure-virtualmachines.supportsAcceleratedNetworking,omitempty"`
-		VirtualMachinePricing          *VirtualMachinePricing         `json:"virtualMachinePricing,omitempty"`
-		VirtualMachinePricingV2        *VirtualMachinePricing         `json:"virtualMachinePricingV2,omitempty"`
-		OperatingSystemFamily          string                         `json:"microsoft-azure-virtualmachines.operatingSystemFamily,omitempty"`
-		OSType                         string                         `json:"microsoft-azure-virtualmachines.osType,omitempty"`
-		OperatingSystem                string                         `json:"microsoft-azure-virtualmachines.operatingSystem,omitempty"`
-		OperationSystem                string                         `json:"microsoft-azure-virtualmachines.operationSystem,omitempty"`
-		RecommendedVirtualMachineSizes []string                       `json:"microsoft-azure-virtualmachines.recommendedVMSizes,omitempty"`
-		VMImages                       map[string]VirtualMachineImage `json:"microsoft-azure-virtualmachines.vmImages,omitempty"`
+		SKUTitle                                    string                         `json:"microsoft-azure-virtualmachines.skuTitle,omitempty"`
+		SKUSummary                                  string                         `json:"microsoft-azure-virtualmachines.skuSummary,omitempty"`
+		SKUDescription                              string                         `json:"microsoft-azure-virtualmachines.skuDescription,omitempty"`
+		HideSKUForSolutionTemplate                  *bool                          `json:"microsoft-azure-virtualmachines.hideSKUForSolutionTemplate,omitempty"`
+		CloudAvailability                           []string                       `json:"microsoft-azure-virtualmachines.cloudAvailability,omitempty"`
+		SupportsAcceleratedNetworking               *bool                          `json:"microsoft-azure-virtualmachines.supportsAcceleratedNetworking,omitempty"`
+		RequiresCustomARMTemplateForDeployment      *bool                          `json:"microsoft-azure-virtualmachines.requiresCustomARMTemplateForDeployment,omitempty"`
+		VirtualMachinePricing                       *VirtualMachinePricing         `json:"virtualMachinePricing,omitempty"`
+		VirtualMachinePricingV2                     *VirtualMachinePricing         `json:"virtualMachinePricingV2,omitempty"`
+		OperatingSystemFamily                       string                         `json:"microsoft-azure-virtualmachines.operatingSystemFamily,omitempty"`
+		OSType                                      string                         `json:"microsoft-azure-virtualmachines.osType,omitempty"`
+		OperatingSystem                             string                         `json:"microsoft-azure-virtualmachines.operatingSystem,omitempty"`
+		OperationSystem                             string                         `json:"microsoft-azure-virtualmachines.operationSystem,omitempty"`
+		RecommendedVirtualMachineSizes              []string                       `json:"microsoft-azure-virtualmachines.recommendedVMSizes,omitempty"`
+		VMImages                                    map[string]VirtualMachineImage `json:"microsoft-azure-virtualmachines.vmImages,omitempty"`
 	}
 
 	// DeploymentModelOption provides a constrained set of deployment modes
