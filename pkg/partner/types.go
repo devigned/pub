@@ -146,9 +146,9 @@ type (
 		SKUDescriptionPublicAzure  string                         `json:"microsoft-azure-corevm.skuDescriptionPublicAzure,omitempty"`
 		SKUDescriptionFairfax      string                         `json:"microsoft-azure-corevm.skuDescriptionFairfax,omitempty"`
 		SKUDescriptionMooncake     string                         `json:"microsoft-azure-corevm.skuDescriptionMooncake,omitempty"`
-		UsefulLinksPublicAzure     []string                       `json:"microsoft-azure-corevm.usefulLinksPublicAzure,omitempty"`
-		UsefulLinksFairfax         []string                       `json:"microsoft-azure-corevm.usefulLinksFairfax,omitempty"`
-		UsefulLinksMooncake        []string                       `json:"microsoft-azure-corevm.usefulLinksMooncake,omitempty"`
+		UsefulLinksPublicAzure     []UsefulLinkDetail             `json:"microsoft-azure-corevm.usefulLinksPublicAzure,omitempty"`
+		UsefulLinksFairfax         []UsefulLinkDetail             `json:"microsoft-azure-corevm.usefulLinksFairfax"`
+		UsefulLinksMooncake        []UsefulLinkDetail             `json:"microsoft-azure-corevm.usefulLinksMooncake,omitempty"`
 		Categories                 []string                       `json:"microsoft-azure-corevm.categories,omitempty"`
 		CategoryMap                []map[string]interface{}       `json:"microsoft-azure-corevm.categoryMap,omitempty"`
 		SmallLogo                  string                         `json:"microsoft-azure-corevm.smallLogo,omitempty"`
@@ -285,6 +285,12 @@ type (
 		PreviewLinks             []Link          `json:"previewLinks,omitempty"`
 		LiveLinks                []Link          `json:"liveLinks,omitempty"`
 		NotificationEmails       string          `json:"notificationEmails,omitempty"`
+	}
+
+	// UsefulLinkDetail is the structure in an PlanCoreVMDetail
+	UsefulLinkDetail struct {
+		LinkTitle string `json:"linkTitle,omitempty"`
+		LinkURL   string `json:"linkUrl,omitempty"`
 	}
 )
 
