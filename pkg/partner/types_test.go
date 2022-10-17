@@ -215,6 +215,7 @@ const (
           "PublicAzure"
         ],
         "microsoft-azure-virtualmachines.supportsAcceleratedNetworking": false,
+        "microsoft-azure-virtualmachines.requiresCustomARMTemplateForDeployment": false,
         "virtualMachinePricing": {
           "isByol": true,
           "freeTrialDurationInMonths": 0,
